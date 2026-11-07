@@ -66,7 +66,7 @@
               <h1>Conhecer para <em>preservar.</em></h1>
               <p>Uma visão integrada do patrimônio arbóreo de Nazareno.</p>
             </div>
-            <button class="button button-primary" id="newTreeButton"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo cadastro</button>
+            <div class="welcome-actions"><button class="button button-outline" id="scanQrButton"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zm4 4h3v3h-3z"/></svg>Ler QR Code</button><button class="button button-primary" id="newTreeButton"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo cadastro</button></div>
           </section>
 
           <section class="hero-panel" aria-label="Projeto Árvores de Nazareno">
@@ -82,10 +82,10 @@
           </section>
 
           <section class="metrics-grid" aria-label="Indicadores do inventário">
-            <article class="metric-card"><div class="metric-top"><span class="metric-icon forest"><svg viewBox="0 0 24 24"><path d="M12 3 5 12h4l-5 7h16l-5-7h4z"/><path d="M12 14v7"/></svg></span><span class="metric-caption">PATRIMÔNIO</span></div><strong class="metric-value">—</strong><span class="metric-foot">Árvores cadastradas</span></article>
-            <article class="metric-card"><div class="metric-top"><span class="metric-icon species"><svg viewBox="0 0 24 24"><path d="M20 4c-8 0-14 3-14 10a6 6 0 0 0 6 6c7 0 8-8 8-16Z"/><path d="M4 21c3-5 7-8 12-11"/></svg></span><span class="metric-caption">DIVERSIDADE</span></div><strong class="metric-value">—</strong><span class="metric-foot">Espécies identificadas</span></article>
-            <article class="metric-card"><div class="metric-top"><span class="metric-icon location"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="metric-caption">GEORREFERÊNCIA</span></div><strong class="metric-value">—</strong><span class="metric-foot">Árvores localizadas</span></article>
-            <article class="metric-card"><div class="metric-top"><span class="metric-icon health"><svg viewBox="0 0 24 24"><path d="M12 21s8-4 8-11V5l-8-3-8 3v5c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="metric-caption">ACOMPANHAMENTO</span></div><strong class="metric-value">—</strong><span class="metric-foot">Registros de manejo</span></article>
+            <article class="metric-card"><div class="metric-top"><span class="metric-icon forest"><svg viewBox="0 0 24 24"><path d="M12 3 5 12h4l-5 7h16l-5-7h4z"/><path d="M12 14v7"/></svg></span><span class="metric-caption">PATRIMÔNIO</span></div><strong class="metric-value" id="metricTrees">0</strong><span class="metric-foot">Árvores cadastradas</span></article>
+            <article class="metric-card"><div class="metric-top"><span class="metric-icon species"><svg viewBox="0 0 24 24"><path d="M20 4c-8 0-14 3-14 10a6 6 0 0 0 6 6c7 0 8-8 8-16Z"/><path d="M4 21c3-5 7-8 12-11"/></svg></span><span class="metric-caption">DIVERSIDADE</span></div><strong class="metric-value" id="metricSpecies">0</strong><span class="metric-foot">Espécies identificadas</span></article>
+            <article class="metric-card"><div class="metric-top"><span class="metric-icon location"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="metric-caption">GEORREFERÊNCIA</span></div><strong class="metric-value" id="metricLocated">0</strong><span class="metric-foot">Árvores localizadas</span></article>
+            <article class="metric-card"><div class="metric-top"><span class="metric-icon health"><svg viewBox="0 0 24 24"><path d="M12 21s8-4 8-11V5l-8-3-8 3v5c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="metric-caption">ACOMPANHAMENTO</span></div><strong class="metric-value" id="metricMaintenance">0</strong><span class="metric-foot">Registros de manejo</span></article>
           </section>
 
           <section class="section-heading" id="inventario">
@@ -98,7 +98,7 @@
               <label class="search-box"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg><input id="treeSearch" type="search" placeholder="Buscar por código, espécie ou nome popular..." aria-label="Buscar árvores" /></label>
               <button class="filter-button" id="filterButton"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10m-7 6h4"/></svg>Filtros <span>0</span></button>
             </div>
-            <div class="empty-state">
+            <div class="empty-state" id="inventoryResults">
               <div class="empty-illustration"><svg viewBox="0 0 100 100" fill="none"><path d="M50 13 27 43h13L23 64h54L60 43h13L50 13Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M50 56v30m-12 0h24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="50" cy="50" r="45" stroke="currentColor" stroke-opacity=".16" stroke-dasharray="3 5"/></svg></div>
               <h3>O inventário está começando</h3>
               <p>Os registros das árvores aparecerão aqui após o levantamento de campo e a integração com o banco de dados.</p>
@@ -111,15 +111,15 @@
             <article class="feature-card map-card" id="mapa">
               <div class="feature-heading"><div><span class="eyebrow">GEORREFERENCIAMENTO</span><h3>Mapa das árvores</h3></div><span class="feature-icon"><svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15m6-12v15"/></svg></span></div>
               <div class="map-placeholder"><div class="map-grid"></div><div class="map-pin"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></div><div class="map-message"><strong>Mapa aguardando coordenadas</strong><span>Os pontos serão exibidos após o georreferenciamento.</span></div></div>
-              <a class="card-link" href="#mapa">Acessar mapa completo <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+              <button class="card-link map-open-button" id="openMapButton" type="button">Acessar mapa completo <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
             </article>
             <article class="feature-card education-card" id="educacao">
               <div class="education-image"></div>
-              <div class="education-content"><span class="eyebrow">CONHECIMENTO E CONSERVAÇÃO</span><h3>Educação ambiental começa com o olhar.</h3><p>Transforme a Praça Central em um circuito de descoberta, ciência e valorização das árvores.</p><a class="card-link" href="#qrcodes">Conhecer o circuito <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+              <div class="education-content"><span class="eyebrow">CONHECIMENTO E CONSERVAÇÃO</span><h3>Educação ambiental começa com o olhar.</h3><p>Transforme a Praça Central em um circuito de descoberta, ciência e valorização das árvores.</p><button class="card-link education-open-button" id="educationButton" type="button">Conhecer o circuito <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
             </article>
           </section>
 
-          <section class="bottom-strip" id="manejo"><div class="bottom-symbol"><svg viewBox="0 0 24 24"><path d="M12 3v4m0 10v4M4.2 7.2 7 10m10 4 2.8 2.8M3 12h4m10 0h4M4.2 16.8 7 14m10-4 2.8-2.8"/><circle cx="12" cy="12" r="4"/></svg></div><div><strong>Gestão técnica e histórico de manejo</strong><span>Registre podas, condições fitossanitárias, ocorrências e atualizações periódicas.</span></div><a href="#manejo" class="text-link">Saiba mais <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></section>
+          <section class="bottom-strip" id="manejo"><div class="bottom-symbol"><svg viewBox="0 0 24 24"><path d="M12 3v4m0 10v4M4.2 7.2 7 10m10 4 2.8 2.8M3 12h4m10 0h4M4.2 16.8 7 14m10-4 2.8-2.8"/><circle cx="12" cy="12" r="4"/></svg></div><div><strong>Gestão técnica e histórico de manejo</strong><span>Registre podas, condições fitossanitárias, ocorrências e atualizações periódicas.</span></div><button type="button" id="maintenanceButton" class="text-link">Saiba mais <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></section>
           <footer class="page-footer" id="qrcodes"><span>ÁRVORES DE NAZARENO · INVENTÁRIO ARBÓREO DIGITAL</span><span>Prefeitura Municipal de Nazareno · Minas Gerais</span></footer>
         </div>
       </main>
