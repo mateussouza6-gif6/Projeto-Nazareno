@@ -70,3 +70,15 @@ export function calculateDap(capCm) {
 }
 
 document.documentElement.dataset.app = 'arvores-de-nazareno';
+
+
+// Registra o service worker para permitir instalação e atualização do PWA.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, {
+      scope: import.meta.env.BASE_URL
+    }).catch((error) => {
+      console.error('Não foi possível registrar o service worker:', error);
+    });
+  });
+}
