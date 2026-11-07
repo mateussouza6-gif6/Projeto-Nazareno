@@ -2,6 +2,11 @@ name: Build Android APK
 
 on:
   workflow_dispatch:
+    inputs:
+      live_reload_url:
+        description: "URL HTTPS pública da porta 5173 do Codespaces (opcional)"
+        required: false
+        type: string
   push:
     branches: [main]
     paths:
@@ -37,6 +42,23 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Configure optional Codespaces live reload
+        env:
+          LIVE_RELOAD_URL: ${{ github.event.inputs.live_reload_url }}
+        run: |
+          if [ -n "$LIVE_RELOAD_URL" ]; then
+            node --input-type=module -e '
+              import fs from "node:fs";
+              const path = "capacitor.config.json";
+              const config = JSON.parse(fs.readFileSync(path, "utf8"));
+              config.server = { url: process.env.LIVE_RELOAD_URL, cleartext: false };
+              fs.writeFileSync(path, JSON.stringify(config, null, 2) + "\\n");
+            '
+            echo "APK configurado para carregar: $LIVE_RELOAD_URL"
+          else
+            echo "APK usará os arquivos locais incluídos no pacote."
+          fi
 
       - name: Build web application
         run: npm run build
