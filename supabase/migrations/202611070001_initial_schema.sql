@@ -277,14 +277,26 @@ grant update on public.profiles to authenticated;
 
 -- Create a public-read bucket for published tree photos. Only staff may upload or alter files.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('tree-photos', 'tree-photos', true, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
+values ('tree-photos', 'tree-photos', false, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
 on conflict (id) do nothing;
 
 drop policy if exists "tree_photos_public_read" on storage.objects;
 create policy "tree_photos_public_read"
 on storage.objects for select
 to anon, authenticated
-using (bucket_id = 'tree-photos');
+using (
+  bucket_id = 'tree-photos'
+  and (
+    public.is_staff()
+    or exists (
+      select 1
+      from public.tree_photos p
+      join public.trees t on t.id = p.tree_id
+      where p.storage_path = storage.objects.name
+        and t.publication_status = 'published'
+    )
+  )
+);
 
 drop policy if exists "tree_photos_staff_upload" on storage.objects;
 create policy "tree_photos_staff_upload"
