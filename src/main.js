@@ -72,6 +72,7 @@ function renderInventory() {
   const term = (searchInput?.value || '').trim().toLocaleLowerCase('pt-BR');
   const list = trees.filter(tree => [tree.code, tree.common, tree.scientific, tree.family].join(' ').toLocaleLowerCase('pt-BR').includes(term));
   if (!list.length) {
+    host.classList.remove('inventory-list');
     host.innerHTML = `<div class="empty-illustration"><svg viewBox="0 0 100 100" fill="none"><path d="M50 13 27 43h13L23 64h54L60 43h13L50 13Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M50 56v30m-12 0h24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></div>
       <h3>${term ? 'Nenhum registro encontrado' : 'O inventário está começando'}</h3>
       <p>${term ? 'Não encontramos árvores com esse termo.' : 'Cadastre a primeira árvore para iniciar o inventário real da Praça Central.'}</p>
