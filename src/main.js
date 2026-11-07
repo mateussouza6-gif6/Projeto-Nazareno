@@ -7,6 +7,7 @@ const sidebar = $('#sidebar');
 const mobileMenu = $('#mobileMenu');
 const searchInput = $('#treeSearch');
 let trees = loadTrees();
+let activeFilter = { condition: '', identification: '' };
 let scannerStream = null;
 
 function loadTrees() {
@@ -70,7 +71,7 @@ function updateMetrics() {
 function renderInventory() {
   const host = $('#inventoryResults');
   const term = (searchInput?.value || '').trim().toLocaleLowerCase('pt-BR');
-  const list = trees.filter(tree => [tree.code, tree.common, tree.scientific, tree.family].join(' ').toLocaleLowerCase('pt-BR').includes(term));
+  const list = trees.filter(tree => [tree.code, tree.common, tree.scientific, tree.family].join(' ').toLocaleLowerCase('pt-BR').includes(term) && (!activeFilter.condition || tree.condition === activeFilter.condition) && (!activeFilter.identification || tree.identification === activeFilter.identification));
   if (!list.length) {
     host.classList.remove('inventory-list');
     host.innerHTML = `<div class="empty-illustration"><svg viewBox="0 0 100 100" fill="none"><path d="M50 13 27 43h13L23 64h54L60 43h13L50 13Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M50 56v30m-12 0h24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></div>
@@ -250,10 +251,10 @@ function showFilters() {
   $('#applyFilters', dialog).addEventListener('click', () => {
     const condition = $('#conditionFilter', dialog).value;
     const identification = $('#identificationFilter', dialog).value;
-    const original = trees;
-    const filtered = original.filter(t => (!condition || t.condition === condition) && (!identification || t.identification === identification));
+    activeFilter = { condition, identification };
     closeModal();
-    renderFilteredInventory(filtered);
+    renderInventory();
+    $('#filterButton span').textContent = Number(Boolean(condition)) + Number(Boolean(identification));
   });
 }
 function renderFilteredInventory(list) {
@@ -261,7 +262,7 @@ function renderFilteredInventory(list) {
   trees = list;
   renderInventory();
   trees = original;
-  $('#filterButton span').textContent = list.length === original.length ? '0' : String(original.length - list.length);
+  $('#filterButton span').textContent = Number(Boolean(activeFilter.condition)) + Number(Boolean(activeFilter.identification));
 }
 function showProfile() {
   openModal('Área técnica', '<div class="access-info"><h3>Ambiente de avaliação</h3><p>Este protótipo ainda não possui autenticação real. Os cadastros ficam neste navegador e não são compartilhados com visitantes.</p><p>Na versão conectada ao Supabase, visitantes poderão consultar fichas publicadas e somente usuários autorizados poderão cadastrar, editar ou excluir árvores.</p><span class="storage-warning">Não use dados oficiais nem informações sensíveis nesta etapa de demonstração.</span></div>', '<button class="button button-primary" data-close>Entendi</button>');
