@@ -1,0 +1,6 @@
+{
+  "appId": "br.com.arvoresdenazareno.app",
+  "appName": "Árvores de Nazareno",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
