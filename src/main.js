@@ -63,10 +63,11 @@ function notify(message) {
   setTimeout(() => toast.remove(), 2800);
 }
 function updateMetrics() {
-  $('#metricTrees').textContent = trees.length;
-  $('#metricSpecies').textContent = new Set(trees.map(t => t.scientific || t.common).filter(Boolean)).size;
-  $('#metricLocated').textContent = trees.filter(t => t.latitude && t.longitude).length;
-  $('#metricMaintenance').textContent = trees.reduce((sum, t) => sum + (t.maintenance || []).length, 0);
+  $('#treeCount')?.replaceChildren(document.createTextNode(`${trees.length} ${trees.length === 1 ? 'registro' : 'registros'}`));
+  $('#metricTrees') && ($('#metricTrees').textContent = trees.length);
+  $('#metricSpecies') && ($('#metricSpecies').textContent = new Set(trees.map(t => t.scientific || t.common).filter(Boolean)).size);
+  $('#metricLocated') && ($('#metricLocated').textContent = trees.filter(t => t.latitude && t.longitude).length);
+  $('#metricMaintenance') && ($('#metricMaintenance').textContent = trees.reduce((sum, t) => sum + (t.maintenance || []).length, 0));
 }
 function renderInventory() {
   const host = $('#inventoryResults');
@@ -284,9 +285,11 @@ function bindEvents() {
   $('#newTreeButton').addEventListener('click', () => showTreeForm());
   $('#emptyNewTree').addEventListener('click', () => showTreeForm());
   $('#scanQrButton').addEventListener('click', showScanner);
+  $('#scanQrShortcut')?.addEventListener('click', showScanner);
   $('#filterButton').addEventListener('click', showFilters);
   $('#profileButton').addEventListener('click', showProfile);
   $('#openMapButton').addEventListener('click', showMap);
+  $('#mapCardButton')?.addEventListener('click', showMap);
   $('#educationButton').addEventListener('click', showEducation);
   $('#maintenanceButton').addEventListener('click', () => {
     if (!trees.length) { notify('Cadastre uma árvore antes de registrar manejo.'); return; }
