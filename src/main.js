@@ -98,7 +98,7 @@ function renderInventory() {
   } else {
     host.classList.add('inventory-list');
     host.innerHTML = list.map(tree => `<article class="tree-row">
-      <div class="tree-thumb">${tree.photos?.[0] ? `<img src="${tree.photos[0].data || tree.photos[0].url}" alt="Foto de ${esc(tree.common || tree.code)}">` : '<span>♧</span>'}</div>
+      <div class="tree-thumb">${tree.photos?.[0] ? `<img src="${tree.photos[0].data || tree.photos[0].url}" alt="Foto de ${esc(tree.common || tree.code)}">` : '<span class="tree-leaf-mark" aria-hidden="true">◆</span>'}</div>
       <div class="tree-row-main"><strong>${esc(tree.code)} · ${esc(tree.common || 'Nome popular não informado')}</strong><span><em>${esc(tree.scientific || 'Identificação botânica pendente')}</em> · ${esc(tree.family || 'Família não informada')}</span><small>CAP: ${esc(tree.cap || '—')} cm · DAP: ${esc(tree.dap || '—')} cm · Altura: ${esc(tree.height || '—')} m</small></div>
       <span class="tree-status">${esc(tree.condition || 'Não avaliada')}</span>
       <button class="button button-outline tree-open" data-open-tree="${tree.id}">Abrir ficha</button>
@@ -247,7 +247,7 @@ async function showTreeDetails(id) {
     <h3>${esc(tree.common || 'Nome popular não informado')}</h3><p><em>${esc(tree.scientific || 'Identificação científica pendente')}</em></p>
     <div class="detail-grid"><div><small>Família</small><strong>${esc(tree.family || '—')}</strong></div><div><small>Origem</small><strong>${esc(tree.origin || '—')}</strong></div><div><small>CAP</small><strong>${esc(tree.cap || '—')} cm</strong></div><div><small>DAP</small><strong>${esc(tree.dap || '—')} cm</strong></div><div><small>Altura</small><strong>${esc(tree.height || '—')} m</strong></div><div><small>Identificação</small><strong>${esc(tree.identification || 'Pendente')}</strong></div></div>
     <p><strong>Fitossanidade:</strong> ${esc(tree.phytosanitary || 'Não informada')}</p><p><strong>Pragas / doenças:</strong> ${esc([tree.pests, tree.diseases].filter(Boolean).join(' / ') || 'Não informadas')}</p><p><strong>Coordenadas:</strong> ${tree.latitude && tree.longitude ? `${esc(tree.latitude)}, ${esc(tree.longitude)} (precisão aproximada: ${esc(tree.locationAccuracy || 'não informada')} m)` : 'Não registradas'}</p><p><strong>Observações:</strong> ${esc(tree.observations || 'Nenhuma')}</p>
-    <div class="detail-photos">${(tree.photos || []).map(photo => `<img src="${photo.data}" alt="Foto de ${esc(tree.code)}">`).join('')}</div>
+    <div class="detail-photos">${(tree.photos || []).map(photo => `<img src="${photo.data || photo.url || ""}" alt="Foto de ${esc(tree.code)}">`).join('')}</div>
     <div class="photo-actions"><button type="button" class="button button-outline" id="detailCamera">▣ Tirar foto</button><button type="button" class="button button-outline" id="detailGallery">＋ Enviar foto</button><input id="detailCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="detailGalleryInput" type="file" accept="image/*" multiple hidden></div>
     <div class="maintenance-history"><h4>Histórico de manejo</h4>${(tree.maintenance || []).map(item => `<p><strong>${esc(item.date)}</strong> · ${esc(item.type)} — ${esc(item.description)}</p>`).join('') || '<p>Nenhum manejo registrado.</p>'}<button class="button button-outline" id="addMaintenance">＋ Registrar manejo</button></div>
     <p class="storage-warning">Ficha de demonstração local. Publicação por QR Code e sincronização dependem do banco de dados.</p>
