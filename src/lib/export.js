@@ -22,7 +22,7 @@ export function exportInventoryWorkbook(trees) {
     Legenda: p.caption || p.name || '', 'Arquivo/URL': p.url || ''
   })));
   const qrs = trees.map(t => ({
-    Código: t.code, Número: t.number, 'Link da ficha': t.publicUrl || '',
+    Código: t.code, Número: t.number, 'Link da ficha': t.publicUrl || `${import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin}/?tree=${encodeURIComponent(t.code)}`,
     'Situação da placa': t.plateStatus || 'Não instalada',
     'Status da ficha': t.publicationStatus || 'Rascunho'
   }));
