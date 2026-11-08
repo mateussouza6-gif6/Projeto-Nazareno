@@ -1,9 +1,10 @@
 import QRCode from 'qrcode';
+import { Geolocation } from '@capacitor/geolocation';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase, loadCloudTrees, saveCloudTree, deleteCloudTree } from './lib/cloud.js';
 import { exportInventoryWorkbook } from './lib/export.js';
-const PUBLIC_APP_URL = import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin;
+const PUBLIC_APP_URL = (import.meta.env.VITE_PUBLIC_APP_URL || new URL(import.meta.env.BASE_URL, window.location.href).href).replace(/\\/?$/, '/');
 
 const STORE_KEY = 'nazareno_demo_trees_v1';
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -177,30 +178,30 @@ function showTreeForm(tree = null) {
     if (persist()) { closeModal(); renderInventory(); notify(editing ? 'Cadastro atualizado.' : `Árvore ${code} cadastrada neste dispositivo.`); }
   });
 }
-function getCurrentPosition() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Este dispositivo não disponibilizou o GPS.'));
-      return;
+async function getCurrentPosition() {
+  try {
+    const permissions = await Geolocation.checkPermissions();
+    if (permissions.location !== 'granted' && permissions.coarseLocation !== 'granted') {
+      const requested = await Geolocation.requestPermissions();
+      if (requested.location !== 'granted' && requested.coarseLocation !== 'granted') {
+        throw new Error('Permita o acesso à localização nas configurações do aplicativo.');
+      }
     }
-    navigator.geolocation.getCurrentPosition(
-      position => resolve({
-        latitude: Number(position.coords.latitude.toFixed(7)),
-        longitude: Number(position.coords.longitude.toFixed(7)),
-        accuracy: Math.round(position.coords.accuracy),
-        capturedAt: new Date(position.timestamp).toISOString()
-      }),
-      error => {
-        const messages = {
-          1: 'Permita o acesso à localização nas configurações do aplicativo.',
-          2: 'O GPS não conseguiu determinar a localização. Tente em uma área aberta.',
-          3: 'O GPS demorou para responder. Tente novamente.'
-        };
-        reject(new Error(messages[error.code] || 'Não foi possível obter a localização.'));
-      },
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-    );
-  });
+    const position = await Geolocation.getCurrentPosition({
+      enableHighAccuracy: true, timeout: 20000, maximumAge: 0
+    });
+    return {
+      latitude: Number(position.coords.latitude.toFixed(7)),
+      longitude: Number(position.coords.longitude.toFixed(7)),
+      accuracy: Math.round(position.coords.accuracy),
+      capturedAt: new Date(position.timestamp).toISOString()
+    };
+  } catch (error) {
+    if (error?.message?.includes('Permita')) throw error;
+    if (error?.code === 'OS-PLUG-GLOC-0003') throw new Error('O GPS não conseguiu determinar a localização. Tente em uma área aberta.');
+    if (error?.message?.toLowerCase().includes('timeout')) throw new Error('O GPS demorou para responder. Tente novamente.');
+    throw new Error(error?.message || 'Não foi possível obter a localização. Verifique a permissão de GPS.');
+  }
 }
 async function capturePhotoWithLocation(file, form = null) {
   let location = null;
