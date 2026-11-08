@@ -115,20 +115,19 @@ function showTreeForm(tree = null) {
       <label>Nome popular<input name="common" value="${esc(tree?.common || '')}" placeholder="Ex.: Ipê-amarelo"></label>
       <label>Nome científico<input name="scientific" value="${esc(tree?.scientific || '')}" placeholder="Ex.: Handroanthus albus"></label>
       <label>Família botânica<input name="family" value="${esc(tree?.family || '')}" placeholder="Ex.: Bignoniaceae"></label>
-      <label>Origem<select name="origin"><option value="unknown">Não identificada</option><option value="native" ${tree?.origin === 'native' ? 'selected' : ''}>Nativa</option><option value="exotic" ${tree?.origin === 'exotic' ? 'selected' : ''}>Exótica</option></select></label>
-      <label>Identificação<select name="identification"><option value="pending">Pendente</option><option value="confirmed" ${tree?.identification === 'confirmed' ? 'selected' : ''}>Confirmada</option><option value="unconfirmed">Não confirmada</option></select></label>
+      <label>Origem<select name="origin"><option value="unknown" ${!tree?.origin || tree?.origin === "unknown" ? "selected" : ""}>Não identificada</option><option value="native" ${tree?.origin === "native" ? "selected" : ""}>Nativa</option><option value="exotic" ${tree?.origin === "exotic" ? "selected" : ""}>Exótica</option></select></label>
+      <label>Identificação<select name="identification"><option value="pending" ${tree?.identification === "pending" || !tree?.identification ? "selected" : ""}>Pendente</option><option value="confirmed" ${tree?.identification === 'confirmed' ? 'selected' : ''}>Confirmada</option><option value="unconfirmed" ${tree?.identification === "unconfirmed" ? "selected" : ""}>Não confirmada</option></select></label>
       <label>Altura estimada (m)<input name="height" type="number" min="0" step="0.1" value="${esc(tree?.height || '')}"></label>
       <label>CAP (cm)<input name="cap" id="capInput" type="number" min="0" step="0.1" value="${esc(tree?.cap || '')}"></label>
       <label>DAP calculado (cm)<input name="dap" id="dapInput" value="${esc(tree?.dap || '')}" readonly></label>
-      <label>Estado geral<select name="condition"><option value="">Não avaliado</option><option>Bom</option><option>Regular</option><option>Ruim</option><option>Morta</option></select></label>
+      <label>Estado geral<select name="condition"><option value="">Não avaliado</option><option ${tree?.condition === "Bom" ? "selected" : ""}>Bom</option><option ${tree?.condition === "Regular" ? "selected" : ""}>Regular</option><option ${tree?.condition === "Ruim" ? "selected" : ""}>Ruim</option><option ${tree?.condition === "Morta" ? "selected" : ""}>Morta</option></select></label>
       <label>Estado fitossanitário<input name="phytosanitary" value="${esc(tree?.phytosanitary || '')}" placeholder="Ex.: sem sintomas aparentes"></label>
       <label>Pragas<input name="pests" value="${esc(tree?.pests || '')}"></label>
       <label>Doenças<input name="diseases" value="${esc(tree?.diseases || '')}"></label>
-      <label>Status da ficha pública<select name="publicationStatus"><option value="draft">Rascunho — não público</option><option value="published">Publicada</option><option value="archived">Arquivada</option></select></label>
+      <label>Status da ficha pública<select name="publicationStatus"><option value="draft" ${tree?.publicationStatus === "draft" || !tree?.publicationStatus ? "selected" : ""}>Rascunho — não público</option><option value="published" ${tree?.publicationStatus === "published" ? "selected" : ""}>Publicada</option><option value="archived" ${tree?.publicationStatus === "archived" ? "selected" : ""}>Arquivada</option></select></label>
       <label>Necessidade de poda<select name="pruningNeeded"><option value="">Não avaliada</option><option value="true">Sim</option><option value="false">Não</option></select></label>
       <label>Conflito com fiação<select name="wireConflict"><option value="">Não avaliado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
       <label>Conflito com calçada<select name="sidewalkConflict"><option value="">Não avaliado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
-      <label>Status da ficha pública<select name="publicationStatus"><option value="draft">Rascunho — não público</option><option value="published">Publicada</option><option value="archived">Arquivada</option></select></label>
       <label>Latitude<input name="latitude" type="number" step="any" value="${esc(tree?.latitude || '')}" placeholder="-21.XXX"></label>
       <label>Longitude<input name="longitude" type="number" step="any" value="${esc(tree?.longitude || '')}" placeholder="-44.XXX"></label>
       <label>Responsável pelo levantamento<input name="responsible" value="${esc(tree?.responsible || '')}"></label>
@@ -146,7 +145,7 @@ function showTreeForm(tree = null) {
     </div>
     <div id="photoPreview" class="photo-preview"></div>
     <button type="button" class="button button-outline" id="captureLocation">Registrar latitude e longitude automaticamente</button>
-    <p class="storage-warning">Modo de avaliação: os dados e fotos ficam apenas neste navegador. Ainda não são enviados ao banco de dados.</p>
+    <p class="storage-warning">${supabase && staffUser ? "Os dados serão sincronizados com a base institucional após salvar." : "Modo local de avaliação: os dados ficam neste navegador e não são compartilhados entre dispositivos."}</p>
   </form>`;
   const dialog = openModal(editing ? `Editar árvore ${code}` : 'Cadastrar nova árvore', body, '<button type="button" class="button button-outline" data-close>Cancelar</button><button type="submit" form="treeForm" class="button button-primary">Salvar cadastro</button>');
   const form = $('#treeForm', dialog);
