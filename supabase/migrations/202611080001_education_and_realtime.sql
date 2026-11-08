@@ -16,6 +16,8 @@ create table if not exists public.education_contents (
   updated_at timestamptz not null default now()
 );
 
+alter table public.trees add column if not exists plate_status text not null default 'not_installed' check (plate_status in ('not_installed','installed','damaged','removed'));
+
 alter table public.education_contents enable row level security;
 
 drop policy if exists "education_read_published" on public.education_contents;
