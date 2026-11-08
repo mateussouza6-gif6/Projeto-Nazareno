@@ -63,10 +63,23 @@ jobs:
       - name: Build web application
         run: npm run build
 
-      - name: Generate Android project
+      - name: Generate Android project with location permissions
         run: |
           npx cap add android
           npx cap sync android
+          python - <<'PY'
+          from pathlib import Path
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          content = manifest.read_text()
+          permissions = [
+              '    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />',
+              '    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />'
+          ]
+          for permission in permissions:
+              if permission not in content:
+                  content = content.replace('<application', permission + '\\n    <application', 1)
+          manifest.write_text(content)
+          PY
 
       - name: Build APK
         working-directory: android
