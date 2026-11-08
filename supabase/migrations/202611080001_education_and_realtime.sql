@@ -7,7 +7,7 @@ create table if not exists public.education_contents (
   slug text not null unique,
   summary text,
   body text not null,
-  target_audience text not null default 'public',
+  target_audience text not null default 'public' check (target_audience in ('public','schools','children','teachers')),
   related_species text,
   status text not null default 'draft' check (status in ('draft','published','archived')),
   created_by uuid references auth.users(id) on delete set null,
@@ -48,7 +48,10 @@ grant select on public.education_contents to anon, authenticated;
 grant insert, update, delete on public.education_contents to authenticated;
 
 -- Realtime supports dynamic inventory refresh on clients.
-alter publication supabase_realtime add table public.trees;
-alter publication supabase_realtime add table public.tree_photos;
-alter publication supabase_realtime add table public.tree_maintenance;
-alter publication supabase_realtime add table public.education_contents;
+do $
+begin
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='trees') then alter publication supabase_realtime add table public.trees; end if;
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='tree_photos') then alter publication supabase_realtime add table public.tree_photos; end if;
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='tree_maintenance') then alter publication supabase_realtime add table public.tree_maintenance; end if;
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='education_contents') then alter publication supabase_realtime add table public.education_contents; end if;
+end $;
