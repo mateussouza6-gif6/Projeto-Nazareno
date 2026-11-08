@@ -1,4 +1,6 @@
 import QRCode from 'qrcode';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { supabase, loadCloudTrees, saveCloudTree, deleteCloudTree } from './lib/cloud.js';
 import { exportInventoryWorkbook } from './lib/export.js';
 const PUBLIC_APP_URL = import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin;
@@ -285,7 +287,7 @@ async function showQr(tree) {
   $('#printQr', dialog).addEventListener('click', () => {
     const win = window.open('', '_blank');
     if (!win) { alert('Permita a abertura de janelas para imprimir.'); return; }
-    win.document.write(`<html><body style="font-family:Arial;text-align:center;padding:30px"><h2>${esc(tree.common || tree.code)}</h2><img width="260" src="${image}"><h3>${esc(tree.code)}</h3><script>window.onload=()=>window.print()<\/script></body></html>`);
+    win.document.write(`<html><head><meta charset="utf-8"><title>Placa ${esc(tree.code)}</title></head><body style="font-family:Arial;text-align:center;padding:28px;color:#173f32"><p>PREFEITURA MUNICIPAL DE NAZARENO – MG</p><p>SECRETARIA MUNICIPAL DE MEIO AMBIENTE</p><h2>ÁRVORE Nº ${esc(tree.number || tree.code)}</h2><img width="240" src="${image}"><h3>${esc(tree.code)}</h3><p>APONTE A CÂMERA DO CELULAR</p><p>Conheça esta árvore e sua importância ambiental.</p><script>window.onload=()=>window.print()<\/script></body></html>`);
     win.document.close();
   });
 }
@@ -409,9 +411,14 @@ function showQrManager() {
   $$('[data-qr-tree]', dialog).forEach(button => button.addEventListener('click', () => showQr(trees.find(t => t.id === button.dataset.qrTree))));
 }
 function showMap() {
-  const located = trees.filter(t => t.latitude && t.longitude);
-  const body = located.length ? `<div class="map-records">${located.map(t => `<p><strong>${esc(t.code)}</strong> · ${esc(t.common || 'Árvore')} <a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${encodeURIComponent(t.latitude)}&mlon=${encodeURIComponent(t.longitude)}#map=19/${encodeURIComponent(t.latitude)}/${encodeURIComponent(t.longitude)}">Abrir localização</a></p>`).join('')}</div>` : '<p>Nenhuma árvore possui coordenadas registradas. Informe latitude e longitude no cadastro para visualizar sua localização.</p>';
-  openModal('Mapa das árvores', body, '<button class="button button-primary" data-close>Fechar</button>');
+  const located=trees.filter(t=>t.latitude!==''&&t.longitude!==''&&Number.isFinite(Number(t.latitude))&&Number.isFinite(Number(t.longitude)));
+  if(!located.length){openModal('Mapa das árvores','<p>As árvores aparecerão neste mapa após o levantamento e o registro das coordenadas geográficas.</p>','<button class="button button-primary" data-close>Fechar</button>');return;}
+  const dialog=openModal('Mapa georreferenciado das árvores','<div id="treeMap" role="application" aria-label="Mapa das árvores cadastradas"></div>','<button class="button button-primary" data-close>Fechar</button>');
+  const first=located[0];
+  const map=L.map($('#treeMap',dialog)).setView([Number(first.latitude),Number(first.longitude)],17);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'&copy; OpenStreetMap'}).addTo(map);
+  located.forEach(tree=>L.marker([Number(tree.latitude),Number(tree.longitude)]).addTo(map).bindPopup('<strong>'+esc(tree.code)+'</strong><br>'+esc(tree.common||'Árvore sem identificação')));
+  setTimeout(()=>map.invalidateSize(),120);
 }
 async function showEducation() {
   let content=[];
