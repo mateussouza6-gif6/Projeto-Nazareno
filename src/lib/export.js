@@ -21,11 +21,11 @@ export function exportInventoryWorkbook(trees) {
   })));
   const photos = trees.flatMap(t => (t.photos || []).map(p => ({
     Código: t.code, 'Nome popular': t.common || '', Categoria: p.category || p.type || '',
-    Legenda: p.caption || p.name || '', 'Arquivo/URL': p.url || ''
+    Legenda: p.caption || p.name || '', 'Arquivo/URL': p.url || p.storagePath || p.data || ''
   })));
   const qrs = trees.map(t => ({
     Código: t.code, Número: t.number, 'Link da ficha': t.publicUrl || `${publicBaseUrl}?tree=${encodeURIComponent(t.code)}`,
-    'Situação da placa': t.plateStatus || 'Não instalada',
+    'QR Code (endereço codificado)': `${publicBaseUrl}?tree=${encodeURIComponent(t.code)}`, 'Situação da placa': t.plateStatus || 'not_installed',
     'Status da ficha': t.publicationStatus || 'Rascunho'
   }));
   const wb = XLSX.utils.book_new();
