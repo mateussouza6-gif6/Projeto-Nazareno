@@ -5,7 +5,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase, loadCloudTrees, saveCloudTree, deleteCloudTree } from './lib/cloud.js';
 import { exportInventoryWorkbook } from './lib/export.js';
-const PUBLIC_APP_URL = (import.meta.env.VITE_PUBLIC_APP_URL || new URL(import.meta.env.BASE_URL, window.location.href).href).replace(/\\/?$/, '/');
+const configuredPublicUrl = import.meta.env.VITE_PUBLIC_APP_URL;
+const PUBLIC_APP_URL = configuredPublicUrl ? (configuredPublicUrl.endsWith('/') ? configuredPublicUrl : configuredPublicUrl + '/') : new URL(import.meta.env.BASE_URL, window.location.href).href;
 
 const STORE_KEY = 'nazareno_demo_trees_v1';
 const $ = (selector, root = document) => root.querySelector(selector);
