@@ -127,35 +127,43 @@ function showTreeForm(tree = null) {
       <label>Responsável pelo levantamento<input name="responsible" value="${esc(tree?.responsible || '')}"></label>
       <label>Data do levantamento<input name="surveyDate" type="date" value="${esc(tree?.surveyDate || new Date().toISOString().slice(0,10))}"></label>
     </div>
+    <label class="full-label">Importância ambiental<textarea name="environmentalImportance" rows="3">${esc(tree?.environmentalImportance || '')}</textarea></label>
+    <label class="full-label">Você sabia? — curiosidade verificada<textarea name="educationalFact" rows="2">${esc(tree?.educationalFact || '')}</textarea></label>
     <label class="full-label">Observações<textarea name="observations" rows="3">${esc(tree?.observations || '')}</textarea></label>
-    <div class="photo-actions"><button type="button" class="button button-outline" id="takePhoto">▣ Tirar foto</button><button type="button" class="button button-outline" id="choosePhoto">＋ Enviar foto da galeria</button><input id="cameraInput" type="file" accept="image/*" capture="environment" hidden><input id="galleryInput" type="file" accept="image/*" multiple hidden></div>
-    <div id="photoPreview" class="photo-preview">${(tree?.photos || []).map((photo, i) => `<img src="${photo.data || photo.url}" alt="Foto ${i+1}">`).join('')}</div>
+    <h3 class="form-section-title">Registro fotográfico do inventário</h3>
+    <div class="photo-slots">
+      <label>Foto 1 — Árvore inteira<input type="file" accept="image/*" capture="environment" data-photo-category="whole_tree"></label>
+      <label>Foto 2 — Tronco<input type="file" accept="image/*" capture="environment" data-photo-category="trunk"></label>
+      <label>Foto 3 — Copa<input type="file" accept="image/*" capture="environment" data-photo-category="crown"></label>
+      <label>Foto 4 — Folha, flor ou fruto (quando pertinente)<input type="file" accept="image/*" capture="environment" data-photo-category="botanical_detail"></label>
+    </div>
+    <div id="photoPreview" class="photo-preview"></div>
+    <button type="button" class="button button-outline" id="captureLocation">Registrar latitude e longitude automaticamente</button>
     <p class="storage-warning">Modo de avaliação: os dados e fotos ficam apenas neste navegador. Ainda não são enviados ao banco de dados.</p>
   </form>`;
   const dialog = openModal(editing ? `Editar árvore ${code}` : 'Cadastrar nova árvore', body, '<button type="button" class="button button-outline" data-close>Cancelar</button><button type="submit" form="treeForm" class="button button-primary">Salvar cadastro</button>');
   const form = $('#treeForm', dialog);
   let photos = [...(tree?.photos || [])];
   $('#capInput', form).addEventListener('input', event => { $('#dapInput', form).value = event.target.value ? (Number(event.target.value) / Math.PI).toFixed(1) : ''; });
-  $('#takePhoto', form).addEventListener('click', () => $('#cameraInput', form).click());
-  $('#choosePhoto', form).addEventListener('click', () => $('#galleryInput', form).click());
-  async function addFiles(files, fromCamera = false) {
+  async function addFiles(files, category) {
     for (const file of [...files]) {
-      if (!file.type.startsWith('image/')) continue;
-      if (fromCamera) {
-        notify('Obtendo coordenadas do local da foto…');
-        photos.push(await capturePhotoWithLocation(file, form));
-      } else {
-        photos.push({ name: file.name, data: await compressImage(file), type: 'gallery', location: null });
-      }
+      if (!file.type.startsWith("image/")) continue;
+      const oldIndex=photos.findIndex(photo=>photo.category===category);
+      if(oldIndex>=0) photos.splice(oldIndex,1);
+      notify("Registrando foto e obtendo coordenadas...");
+      const photo=await capturePhotoWithLocation(file,form);
+      photo.category=category;
+      photos.push(photo);
     }
-    $('#photoPreview', form).innerHTML = photos.map((photo, i) => `<img src="${photo.data}" alt="Foto ${i+1}">`).join('');
+    $("#photoPreview",form).innerHTML=photos.map((photo,i)=>`<img src="${photo.data || photo.url || ""}" alt="Foto ${i+1}" title="${photo.category || ""}">`).join("");
   }
-  $('#cameraInput', form).addEventListener('change', event => addFiles(event.target.files, true));
-  $('#galleryInput', form).addEventListener('change', event => addFiles(event.target.files));
+  $$("[data-photo-category]",form).forEach(input=>input.addEventListener("change",event=>addFiles(event.target.files,event.target.dataset.photoCategory)));
+  $("#captureLocation",form).addEventListener("click",async()=>{try{const position=await getCurrentPosition();form.elements.latitude.value=position.latitude;form.elements.longitude.value=position.longitude;notify("Coordenadas registradas. Precisão aproximada: "+position.accuracy+" m.");}catch(error){notify(error.message);}});
   form.addEventListener('submit', event => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(form).entries());
     if (!data.common && !data.scientific) { alert('Informe ao menos o nome popular ou científico.'); return; }
+    if(['whole_tree','trunk','crown'].some(type=>!photos.some(photo=>photo.category===type))){alert('Registre as fotos da árvore inteira, tronco e copa. O detalhe botânico é adicionado quando pertinente.');return;}
     const number = tree?.number || nextCode().number;
     const cameraLocation = [...photos].reverse().find(photo => photo.type === 'camera' && photo.location)?.location;
     const saved = { ...tree, ...data, ...(cameraLocation ? { latitude: cameraLocation.latitude, longitude: cameraLocation.longitude, locationAccuracy: cameraLocation.accuracy, locationCapturedAt: cameraLocation.capturedAt } : {}), number, id: tree?.id || crypto.randomUUID(), photos, dap: data.cap ? (Number(data.cap) / Math.PI).toFixed(1) : '', maintenance: tree?.maintenance || [], updatedAt: new Date().toISOString() };
