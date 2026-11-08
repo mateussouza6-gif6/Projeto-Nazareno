@@ -1,141 +1,65 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#123d32" />
-    <meta name="description" content="Inventário arbóreo digital e educação ambiental de Nazareno, Minas Gerais." />
-    <title>Árvores de Nazareno | Inventário Arbóreo Digital</title>
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/src/style.css" />
-  </head>
-  <body>
-    <div class="app-shell">
-      <aside class="sidebar" id="sidebar">
-        <a class="brand" href="#inicio" aria-label="Árvores de Nazareno - início">
-          <span class="brand-symbol" aria-hidden="true">
-            <svg viewBox="0 0 40 40" fill="none"><path d="M20 4 8 19h7L7 29h10v7h6v-7h10l-8-10h7L20 4Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M20 21v15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-          </span>
-          <span class="brand-copy"><strong>Árvores de</strong><b>Nazareno</b><small>INVENTÁRIO ARBÓREO DIGITAL</small></span>
-        </a>
-
-        <div class="side-label">PLATAFORMA</div>
-        <nav class="main-nav" aria-label="Navegação principal">
-          <a class="nav-link active" href="#inicio" data-section="inicio"><span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg></span>Visão geral</a>
-          <a class="nav-link" href="#inventario" data-section="inventario"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5z"/><path d="M4 6h13M8 9h8M8 13h6"/></svg></span>Inventário</a>
-          <a class="nav-link" href="#mapa" data-section="mapa"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15m6-12v15"/></svg></span>Mapa das árvores</a>
-          <a class="nav-link" href="#manejo" data-section="manejo"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 3v4m0 10v4M4.2 7.2 7 10m10 4 2.8 2.8M3 12h4m10 0h4M4.2 16.8 7 14m10-4 2.8-2.8"/><circle cx="12" cy="12" r="4"/></svg></span>Manejo e histórico</a>
-        </nav>
-
-        <div class="side-label side-label-spaced">CONTEÚDO</div>
-        <nav class="main-nav" aria-label="Conteúdo">
-          <a class="nav-link" href="#educacao" data-section="educacao"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M8 7h8m-8 4h8"/></svg></span>Educação ambiental</a>
-          <a class="nav-link" href="#qrcodes" data-section="qrcodes"><span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zm4 4h3v3h-3zm0-4h3"/></svg></span>QR Codes e placas</a>
-        </nav>
-
-        <div class="sidebar-bottom">
-          <div class="project-card">
-            <span class="project-kicker">PROJETO PILOTO</span>
-            <strong>Praça Central</strong>
-            <span class="project-location"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>Nazareno · Minas Gerais</span>
-            <div class="project-progress"><span></span></div>
-            <small>Estruturação da plataforma</small>
-          </div>
-          <div class="sidebar-footer">PLATAFORMA MUNICIPAL DE ARBORIZAÇÃO<br /><span>VERSÃO 1.0 · 2026</span></div>
-        </div>
-      </aside>
-
-      <main class="main-area" id="inicio">
-        <header class="topbar">
-          <button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-          <div class="breadcrumb"><span>Árvores de Nazareno</span><i>/</i><strong>Visão geral</strong></div>
-          <div class="topbar-actions">
-            <span class="system-status"><span></span>Ambiente de desenvolvimento</span>
-            <button class="profile-button" id="profileButton" aria-label="Área administrativa"><span class="profile-avatar">AN</span><span class="profile-text"><strong>Área técnica</strong><small>Acesso administrativo</small></span><svg viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></svg></button>
-          </div>
-        </header>
-
-        <div class="content-wrap">
-          <section class="welcome-row">
-            <div>
-              <div class="eyebrow"><span></span> GESTÃO DA ARBORIZAÇÃO URBANA</div>
-              <h1>Conhecer para <em>preservar.</em></h1>
-              <p>Uma visão integrada do patrimônio arbóreo de Nazareno.</p>
-            </div>
-            <div class="welcome-actions"><button class="button button-outline" id="scanQrButton"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zm4 4h3v3h-3z"/></svg>Ler QR Code</button><button class="button button-primary" id="newTreeButton"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo cadastro</button></div>
-          </section>
-
-          <section class="hero-panel" aria-label="Projeto Árvores de Nazareno">
-            <div class="hero-photo"></div>
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-              <span class="hero-tag">PROJETO ÁRVORES DE NAZARENO</span>
-              <h2>Um inventário vivo.<br /><span>Uma cidade mais consciente.</span></h2>
-              <p>Informação, ciência e educação ambiental conectadas a cada árvore da cidade.</p>
-              <a class="hero-link" href="#inventario">Explorar inventário <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
-            </div>
-            <div class="hero-index"><strong>01</strong><span>Praça Central<br />Nazareno · MG</span></div>
-          </section>
-
-          <section class="metrics-grid" aria-label="Indicadores do inventário">
-            <article class="metric-card"><div class="metric-top"><span class="metric-icon forest"><svg viewBox="0 0 24 24"><path d="M12 3 5 12h4l-5 7h16l-5-7h4z"/><path d="M12 14v7"/></svg></span><span class="metric-caption">PATRIMÔNIO</span></div><strong class="metric-value" id="metricTrees">0</strong><span class="metric-foot">Árvores cadastradas</span></article>
-            <article class="metric-card"><div class="metric-top"><span class="metric-icon species"><svg viewBox="0 0 24 24"><path d="M20 4c-8 0-14 3-14 10a6 6 0 0 0 6 6c7 0 8-8 8-16Z"/><path d="M4 21c3-5 7-8 12-11"/></svg></span><span class="metric-caption">DIVERSIDADE</span></div><strong class="metric-value" id="metricSpecies">0</strong><span class="metric-foot">Espécies identificadas</span></article>
-            <article class="metric-card"><div class="metric-top"><span class="metric-icon location"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="metric-caption">GEORREFERÊNCIA</span></div><strong class="metric-value" id="metricLocated">0</strong><span class="metric-foot">Árvores localizadas</span></article>
-            <article class="metric-card"><div class="metric-top"><span class="metric-icon health"><svg viewBox="0 0 24 24"><path d="M12 21s8-4 8-11V5l-8-3-8 3v5c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="metric-caption">ACOMPANHAMENTO</span></div><strong class="metric-value" id="metricMaintenance">0</strong><span class="metric-foot">Registros de manejo</span></article>
-          </section>
-
-          <section class="section-heading" id="inventario">
-            <div><span class="eyebrow">BASE DE DADOS</span><h2>Inventário arbóreo</h2><p>Consulte e acompanhe os indivíduos registrados no município.</p></div>
-            <a class="text-link" href="#inventario">Ver inventário completo <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
-          </section>
-
-          <section class="inventory-panel">
-            <div class="inventory-toolbar">
-              <label class="search-box"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg><input id="treeSearch" type="search" placeholder="Buscar por código, espécie ou nome popular..." aria-label="Buscar árvores" /></label>
-              <button class="filter-button" id="filterButton"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10m-7 6h4"/></svg>Filtros <span>0</span></button>
-            </div>
-            <div class="empty-state" id="inventoryResults">
-              <div class="empty-illustration"><svg viewBox="0 0 100 100" fill="none"><path d="M50 13 27 43h13L23 64h54L60 43h13L50 13Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M50 56v30m-12 0h24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="50" cy="50" r="45" stroke="currentColor" stroke-opacity=".16" stroke-dasharray="3 5"/></svg></div>
-              <h3>O inventário está começando</h3>
-              <p>Os registros das árvores aparecerão aqui após o levantamento de campo e a integração com o banco de dados.</p>
-              <button class="button button-outline" id="emptyNewTree"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Preparar primeiro cadastro</button>
-              <span class="empty-note">Nenhuma árvore foi inserida como dado demonstrativo.</span>
-            </div>
-          </section>
-
-          <section class="lower-grid">
-            <article class="feature-card map-card" id="mapa">
-              <div class="feature-heading"><div><span class="eyebrow">GEORREFERENCIAMENTO</span><h3>Mapa das árvores</h3></div><span class="feature-icon"><svg viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15m6-12v15"/></svg></span></div>
-              <div class="map-placeholder"><div class="map-grid"></div><div class="map-pin"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></div><div class="map-message"><strong>Mapa aguardando coordenadas</strong><span>Os pontos serão exibidos após o georreferenciamento.</span></div></div>
-              <button class="card-link map-open-button" id="openMapButton" type="button">Acessar mapa completo <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-            </article>
-            <article class="feature-card education-card" id="educacao">
-              <div class="education-image"></div>
-              <div class="education-content"><span class="eyebrow">CONHECIMENTO E CONSERVAÇÃO</span><h3>Educação ambiental começa com o olhar.</h3><p>Transforme a Praça Central em um circuito de descoberta, ciência e valorização das árvores.</p><button class="card-link education-open-button" id="educationButton" type="button">Conhecer o circuito <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
-            </article>
-          </section>
-
-          <section class="bottom-strip" id="manejo"><div class="bottom-symbol"><svg viewBox="0 0 24 24"><path d="M12 3v4m0 10v4M4.2 7.2 7 10m10 4 2.8 2.8M3 12h4m10 0h4M4.2 16.8 7 14m10-4 2.8-2.8"/><circle cx="12" cy="12" r="4"/></svg></div><div><strong>Gestão técnica e histórico de manejo</strong><span>Registre podas, condições fitossanitárias, ocorrências e atualizações periódicas.</span></div><button type="button" id="maintenanceButton" class="text-link">Saiba mais <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></section>
-          <footer class="page-footer" id="qrcodes"><span>ÁRVORES DE NAZARENO · INVENTÁRIO ARBÓREO DIGITAL</span><span>Prefeitura Municipal de Nazareno · Minas Gerais</span></footer>
-        </div>
-      </main>
-    </div>
-
-    <div class="modal-backdrop" id="noticeModal" hidden>
-      <section class="notice-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-        <button class="modal-close" id="closeModal" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
-        <span class="modal-mark"><svg viewBox="0 0 40 40"><path d="M20 4 8 19h7L7 29h10v7h6v-7h10l-8-10h7L20 4Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M20 21v15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>
-        <span class="eyebrow">PRÓXIMA ETAPA DE IMPLEMENTAÇÃO</span>
-        <h2 id="modalTitle">Cadastro técnico em preparação</h2>
-        <p>A estrutura visual está pronta. Antes de gravar árvores e fotografias com segurança, será integrado o banco de dados com autenticação, armazenamento e permissões administrativas.</p>
-        <div class="modal-checklist"><span><i></i> Banco de dados e regras de acesso</span><span><i></i> Formulário técnico completo</span><span><i></i> Upload de fotografias e QR Code</span></div>
-        <button class="button button-primary modal-action" id="confirmModal">Entendi</button>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#176b4b" />
+  <meta name="description" content="Conheça as árvores de Nazareno e descubra a importância da arborização urbana." />
+  <title>Árvores de Nazareno</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="#inicio"><span class="brand-symbol" aria-hidden="true">✳</span><span><strong>Árvores de</strong><b>Nazareno</b><small>EDUCAÇÃO AMBIENTAL</small></span></a>
+    <nav class="main-nav" aria-label="Navegação principal">
+      <a class="nav-link active" href="#inicio" data-section="inicio">Início</a>
+      <a class="nav-link" href="#inventario" data-section="inventario">Conheça as árvores</a>
+      <a class="nav-link" href="#mapa" data-section="mapa">Mapa</a>
+      <a class="nav-link" href="#educacao" data-section="educacao">Educação ambiental</a>
+      <a class="nav-link" href="#qrcodes" data-section="qrcodes">QR Codes</a>
+      <a class="nav-link" href="#manejo" data-section="manejo">Área técnica</a>
+    </nav>
+    <div class="sidebar-note"><strong>Conhecer é preservar.</strong><span>Descubra a diversidade das árvores da nossa cidade.</span></div>
+  </aside>
+  <main class="main-area" id="inicio">
+    <header class="topbar">
+      <button class="mobile-menu" id="mobileMenu" aria-label="Abrir menu" aria-expanded="false">☰</button>
+      <a class="mobile-brand" href="#inicio">Árvores de <strong>Nazareno</strong></a>
+      <button class="profile-button" id="profileButton" aria-label="Área técnica"><span class="profile-avatar">AT</span><span class="profile-text"><strong>Área técnica</strong><small>Acesso restrito</small></span></button>
+    </header>
+    <div class="content-wrap">
+      <section class="welcome-row">
+        <div class="welcome-copy"><span class="eyebrow">NATUREZA • CONHECIMENTO • CONSERVAÇÃO</span><h1>Descubra as árvores<br /><em>de Nazareno.</em></h1><p>Um convite para conhecer, valorizar e cuidar da arborização da nossa cidade.</p></div>
+        <div class="welcome-actions"><button class="button button-primary" id="scanQrButton"><span class="action-symbol">▦</span>Ler QR Code</button></div>
       </section>
+      <label class="search-box"><span aria-hidden="true">⌕</span><input id="treeSearch" type="search" placeholder="Busque pelo nome da árvore ou espécie..." aria-label="Buscar árvores" /></label>
+      <section class="quick-actions" aria-label="Acesso rápido">
+        <button class="action-card action-register" id="newTreeButton"><span class="action-icon">＋</span><strong>Cadastrar árvore</strong><small>Área técnica</small></button>
+        <a class="action-card action-discover" href="#inventario"><span class="action-icon">⌕</span><strong>Conheça as árvores</strong><small>Espécies e curiosidades</small></a>
+        <button class="action-card action-map" id="openMapButton"><span class="action-icon">⌖</span><strong>Explorar o mapa</strong><small>Localização das árvores</small></button>
+        <button class="action-card action-qr" id="scanQrShortcut"><span class="action-icon">▦</span><strong>Identificar por QR</strong><small>Leia uma placa</small></button>
+      </section>
+      <section class="education-banner" aria-label="Mensagem de educação ambiental">
+        <div class="banner-content"><span class="banner-kicker">NOSSA CIDADE, NOSSO PATRIMÔNIO</span><h2>Cada árvore conta<br />uma história.</h2><p>Conheça as espécies, descubra seus benefícios e faça parte da conservação do verde urbano.</p><a class="banner-link" href="#educacao">Por que as árvores são importantes? <span>→</span></a></div>
+        <div class="banner-art" aria-hidden="true"><div class="sun"></div><div class="tree-shape tree-one"></div><div class="tree-shape tree-two"></div><div class="ground"></div></div>
+      </section>
+      <section class="section-heading" id="inventario"><div><span class="eyebrow">INVENTÁRIO ARBÓREO</span><h2>Conheça as árvores</h2><p>Explore as informações das árvores registradas em Nazareno.</p></div><span class="result-count" id="treeCount">0 registros</span></section>
+      <section class="inventory-panel"><div class="inventory-toolbar"><span>Árvores cadastradas</span><button class="filter-button" id="filterButton">Filtros <span>0</span></button></div><div class="empty-state" id="inventoryResults"><div class="empty-illustration">♧</div><h3>Estamos preparando nosso inventário</h3><p>Em breve, você poderá conhecer as árvores cadastradas, suas características e curiosidades.</p><button class="button button-outline" id="emptyNewTree">Preparar primeiro cadastro</button><span class="empty-note">Nenhuma árvore foi inserida como dado demonstrativo.</span></div></section>
+      <section class="lower-grid">
+        <article class="feature-card map-card" id="mapa"><div class="feature-heading"><div><span class="eyebrow">DESCUBRA PELO TERRITÓRIO</span><h3>Mapa das árvores</h3></div><span class="feature-icon">⌖</span></div><div class="map-placeholder"><div class="map-pattern"></div><div class="map-message"><strong>Explore a arborização da cidade</strong><span>As árvores aparecerão no mapa conforme forem georreferenciadas.</span></div></div><button class="card-link" id="mapCardButton" type="button">Abrir mapa <span>→</span></button></article>
+        <article class="feature-card education-card" id="educacao"><span class="eyebrow">APRENDER PARA CONSERVAR</span><h3>Por que as árvores são importantes?</h3><p>Elas oferecem sombra, ajudam a regular a temperatura, contribuem para a biodiversidade e tornam os espaços urbanos mais agradáveis.</p><button class="card-link education-open-button" id="educationButton" type="button">Conhecer o projeto <span>→</span></button></article>
+      </section>
+      <section class="bottom-strip" id="manejo"><div><strong>Conteúdo técnico e educativo</strong><span>As informações botânicas serão revisadas antes de serem disponibilizadas ao público.</span></div><button class="text-link" id="maintenanceButton" type="button">Área técnica <span>→</span></button></section>
+      <footer class="page-footer" id="qrcodes"><span>ÁRVORES DE NAZARENO</span><span>Educação ambiental e valorização da arborização urbana · Nazareno, MG</span></footer>
     </div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+  </main>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
 </html>
