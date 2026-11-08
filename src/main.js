@@ -423,7 +423,17 @@ function showMap() {
   const first=located[0];
   const map=L.map($('#treeMap',dialog)).setView([Number(first.latitude),Number(first.longitude)],17);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'&copy; OpenStreetMap'}).addTo(map);
-  located.forEach(tree=>L.marker([Number(tree.latitude),Number(tree.longitude)]).addTo(map).bindPopup('<strong>'+esc(tree.code)+'</strong><br>'+esc(tree.common||'Árvore sem identificação')));
+  located.forEach(tree=>{
+    const marker=L.marker([Number(tree.latitude),Number(tree.longitude)]).addTo(map)
+      .bindPopup('<strong>'+esc(tree.code)+'</strong><br>'+esc(tree.common||'Árvore sem identificação'));
+    marker.on('popupopen',event=>{
+      const popup=event.popup.getElement();
+      const action=document.createElement('button');
+      action.type='button';action.className='button button-outline';action.textContent='Abrir ficha digital';
+      action.addEventListener('click',()=>staffUser?showTreeDetails(tree.id):showPublicTreeByCode(tree.code));
+      popup.querySelector('.leaflet-popup-content')?.append(action);
+    });
+  });
   setTimeout(()=>map.invalidateSize(),120);
 }
 async function showEducation() {
