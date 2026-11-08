@@ -1,5 +1,6 @@
 import QRCode from 'qrcode';
 import { Geolocation } from '@capacitor/geolocation';
+import { Capacitor } from '@capacitor/core';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase, loadCloudTrees, saveCloudTree, deleteCloudTree } from './lib/cloud.js';
@@ -180,11 +181,13 @@ function showTreeForm(tree = null) {
 }
 async function getCurrentPosition() {
   try {
-    const permissions = await Geolocation.checkPermissions();
-    if (permissions.location !== 'granted' && permissions.coarseLocation !== 'granted') {
-      const requested = await Geolocation.requestPermissions();
-      if (requested.location !== 'granted' && requested.coarseLocation !== 'granted') {
-        throw new Error('Permita o acesso à localização nas configurações do aplicativo.');
+    if (Capacitor.isNativePlatform()) {
+      const permissions = await Geolocation.checkPermissions();
+      if (permissions.location !== 'granted' && permissions.coarseLocation !== 'granted') {
+        const requested = await Geolocation.requestPermissions();
+        if (requested.location !== 'granted' && requested.coarseLocation !== 'granted') {
+          throw new Error('Permita o acesso à localização nas configurações do aplicativo.');
+        }
       }
     }
     const position = await Geolocation.getCurrentPosition({
