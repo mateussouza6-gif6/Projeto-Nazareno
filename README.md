@@ -57,3 +57,24 @@ O aplicativo não deve inventar registros de árvores, medições, coordenadas, 
 ## Situação do desenvolvimento
 
 Este repositório inicia a nova implementação. A integração com Supabase, as migrações, o fluxo de autenticação, o armazenamento de fotos e a geração final do APK serão concluídos e testados nas próximas etapas.
+
+
+## Recursos administrativos e QR Codes
+
+- Cada árvore recebe um identificador no padrão `NAZ-PRA-001`.
+- A ficha pública é acessada por endereço HTTPS estável com o parâmetro `?tree=NAZ-PRA-001`.
+- Configure `VITE_PUBLIC_APP_URL` com o endereço definitivo publicado antes de imprimir placas.
+- O formulário técnico organiza as fotografias por categoria: árvore inteira, tronco, copa e detalhe botânico (quando pertinente).
+- O painel administrativo exporta um arquivo Excel com as abas Inventário, Manejo, Fotografias e QR Codes.
+- O conteúdo educativo é criado e publicado por usuários autorizados.
+- O inventário conectado ao Supabase atualiza os clientes em tempo real por meio do Realtime.
+
+### Ativação da equipe administrativa
+
+1. Configure as variáveis `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` e `VITE_PUBLIC_APP_URL` no ambiente de implantação.
+2. Aplique, em ordem, as migrações SQL de `supabase/migrations`.
+3. Crie as contas da equipe no Supabase Auth.
+4. Promova explicitamente os usuários autorizados na tabela `profiles`, por exemplo: `update public.profiles set role = 'admin' where id = (select id from auth.users where email = 'email-institucional');`.
+5. Mantenha as demais contas com o perfil `viewer`. Nunca disponibilize a chave `service_role` no aplicativo.
+
+Sem a configuração do Supabase, o modo local de desenvolvimento utiliza apenas o armazenamento do navegador e não sincroniza dados entre dispositivos. O QR Code impresso só será permanente e acessível ao público quando `VITE_PUBLIC_APP_URL` apontar para uma versão HTTPS publicada.
