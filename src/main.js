@@ -98,7 +98,7 @@ function renderInventory() {
       <span class="tree-status">${esc(tree.condition || 'Não avaliada')}</span>
       <button class="button button-outline tree-open" data-open-tree="${tree.id}">Abrir ficha</button>
     </article>`).join('');
-    $$('[data-open-tree]', host).forEach(button => button.addEventListener('click', () => showTreeDetails(button.dataset.openTree)));
+    $('[data-open-tree]', host).forEach(button => button.addEventListener('click', () => staffUser ? showTreeDetails(button.dataset.openTree) : showPublicTreeByCode(trees.find(t=>t.id===button.dataset.openTree)?.code)));
   }
   updateMetrics();
 }
@@ -122,6 +122,10 @@ function showTreeForm(tree = null) {
       <label>Estado fitossanitário<input name="phytosanitary" value="${esc(tree?.phytosanitary || '')}" placeholder="Ex.: sem sintomas aparentes"></label>
       <label>Pragas<input name="pests" value="${esc(tree?.pests || '')}"></label>
       <label>Doenças<input name="diseases" value="${esc(tree?.diseases || '')}"></label>
+      <label>Necessidade de poda<select name="pruningNeeded"><option value="">Não avaliada</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+      <label>Conflito com fiação<select name="wireConflict"><option value="">Não avaliado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+      <label>Conflito com calçada<select name="sidewalkConflict"><option value="">Não avaliado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+      <label>Status da ficha pública<select name="publicationStatus"><option value="draft">Rascunho — não público</option><option value="published">Publicada</option><option value="archived">Arquivada</option></select></label>
       <label>Latitude<input name="latitude" type="number" step="any" value="${esc(tree?.latitude || '')}" placeholder="-21.XXX"></label>
       <label>Longitude<input name="longitude" type="number" step="any" value="${esc(tree?.longitude || '')}" placeholder="-44.XXX"></label>
       <label>Responsável pelo levantamento<input name="responsible" value="${esc(tree?.responsible || '')}"></label>
@@ -320,7 +324,7 @@ function openByCode(value) {
   const code = raw.toUpperCase();
   const tree = trees.find(item => item.code.toUpperCase() === code);
   if (!tree) { alert('Nenhuma árvore com esse código foi encontrada neste dispositivo.'); return; }
-  showTreeDetails(tree.id);
+  if(staffUser) showTreeDetails(tree.id); else showPublicTreeByCode(tree.code);
 }
 function stopScanner() {
   scannerStream?.getTracks().forEach(track => track.stop());
@@ -416,6 +420,24 @@ async function showEducation() {
   const fallback='<div class="access-info"><h3>Conheça as árvores da Praça Central</h3><p>O projeto apresenta informações botânicas, características das árvores e sua importância ambiental.</p><p>Os conteúdos educativos serão elaborados e publicados pela equipe técnica após revisão.</p></div>';
   openModal("Educação ambiental",cards||fallback,'<button class="button button-primary" data-close>Fechar</button>');
 }
+async function showPublicTreeByCode(code) {
+  const tree=trees.find(item=>String(item.code).toLowerCase()===String(code).toLowerCase());
+  if(!tree){openModal("Ficha não encontrada","<p>Não encontramos uma árvore com esse código.</p>","<button class=\"button button-primary\" data-close>Fechar</button>");return;}
+  if(supabase && tree.publicationStatus!=="published"){openModal("Ficha não publicada","<p>Esta ficha ainda não foi liberada pela equipe técnica.</p>","<button class=\"button button-primary\" data-close>Fechar</button>");return;}
+  const labels={whole_tree:"Árvore inteira",trunk:"Tronco",crown:"Copa",botanical_detail:"Folha, flor ou fruto"};
+  const photos=(tree.photos||[]).filter(p=>p.data||p.url).map(p=>"<figure><img src=\""+(p.url||p.data)+"\" alt=\""+esc(labels[p.category]||"Fotografia da árvore")+"\"><figcaption>"+esc(labels[p.category]||"Fotografia")+"</figcaption></figure>").join("");
+  const body="<article class=\"public-tree-card\"><div class=\"detail-code\">"+esc(tree.code)+" <span>Inventário arbóreo · Praça Central</span></div>"+
+    "<h2>"+esc(tree.common||"Nome popular não informado")+"</h2><p><em>"+esc(tree.scientific||"Identificação botânica pendente")+"</em></p>"+
+    "<p><strong>Família botânica:</strong> "+esc(tree.family||"Não informada")+"</p><p><strong>Origem:</strong> "+esc(tree.origin==="native"?"Nativa":tree.origin==="exotic"?"Exótica":"Não identificada")+"</p>"+
+    "<h3>Características</h3><p>Altura estimada: "+esc(tree.height||"Não registrada")+" m</p><p>Circunferência: "+esc(tree.cap||"Não registrada")+" cm</p><p>Diâmetro: "+esc(tree.dap||"Não registrado")+" cm</p>"+
+    "<h3>Localização</h3><p>Praça Central — Nazareno/MG</p><p>Latitude: "+esc(tree.latitude||"Não registrada")+" · Longitude: "+esc(tree.longitude||"Não registrada")+"</p>"+
+    "<h3>Importância ambiental</h3><p>"+esc(tree.environmentalImportance||"Conteúdo em elaboração pela equipe técnica.")+"</p>"+
+    "<h3>Fotografias</h3><div class=\"public-photo-grid\">"+(photos||"<p>Fotografias ainda não disponibilizadas.</p>")+"</div>"+
+    "<h3>Você sabia?</h3><p>"+esc(tree.educationalFact||"Curiosidade em elaboração após revisão botânica.")+"</p>"+
+    "<footer>Projeto Árvores de Nazareno · Secretaria Municipal de Meio Ambiente</footer></article>";
+  openModal("Ficha digital da árvore",body,"<button class=\"button button-primary\" data-close>Fechar ficha</button>");
+}
+
 function bindEvents() {
   $('#newTreeButton').addEventListener('click', () => showTreeForm());
   $('#emptyNewTree').addEventListener('click', () => showTreeForm());
