@@ -17,7 +17,8 @@
     "@supabase/supabase-js": "^2.57.0",
     "leaflet": "^1.9.4",
     "qrcode": "^1.5.4",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "@capacitor/geolocation": "^7.1.5"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.4.3",
