@@ -286,7 +286,7 @@ async function showTreeDetails(id) {
   $('#detailGalleryInput', dialog).addEventListener('change', e => saveMorePhotos(e.target.files));
 }
 async function showQr(tree) {
-  const value = `${PUBLIC_APP_URL}/?tree=${encodeURIComponent(tree.code)}`;
+  const value = `${PUBLIC_APP_URL}?tree=${encodeURIComponent(tree.code)}`;
   const image = await QRCode.toDataURL(value, { width: 260, margin: 2, color: { dark: '#173f32', light: '#ffffff' } });
   const dialog = openModal(`QR Code · ${tree.code}`, `<div class="qr-display"><img src="${image}" alt="QR Code de ${esc(tree.code)}"><strong>${esc(tree.common || tree.code)}</strong><span>${esc(tree.code)}</span><p>Este endereço abre a ficha digital pública quando o aplicativo estiver publicado em um endereço HTTPS permanente.</p></div>`, '<button class="button button-outline" data-close>Fechar</button><button class="button button-primary" id="printQr">Imprimir QR Code</button>');
   $('#printQr', dialog).addEventListener('click', () => {
