@@ -44,7 +44,7 @@ export function calculateDap(capCm) {
 }
 function nextCode() {
   const next = trees.reduce((max, tree) => Math.max(max, Number(tree.number) || 0), 0) + 1;
-  return { number: next, code: `PRA-${String(next).padStart(3, '0')}` };
+  return { number: next, code: `NAZ-PRA-${String(next).padStart(3, '0')}` };
 }
 function openModal(title, body, actions = '') {
   closeModal();
@@ -395,13 +395,14 @@ async function manageEducationContent() {
   const dialog=openModal('Conteúdos educativos',body,'<button class="button button-primary" data-close>Fechar</button>');
   $('[data-edit-content]',dialog).forEach(button=>button.addEventListener('click',()=>showEducationEditor(data.find(x=>x.id===button.dataset.editContent))));
 }
+async function refreshCloudInventory(){const refreshed=await loadCloudTrees();trees=refreshed||[];localStorage.setItem(STORE_KEY,JSON.stringify(trees));renderInventory();}
 async function bootstrapCloud() {
   if(!supabase)return;
   try {
     const remote=await loadCloudTrees();
     if(remote){trees=remote;localStorage.setItem(STORE_KEY,JSON.stringify(trees));renderInventory();}
     realtimeChannel?.unsubscribe();
-    realtimeChannel=supabase.channel('public-arboreal-inventory').on('postgres_changes',{event:'*',schema:'public',table:'trees'},async()=>{const refreshed=await loadCloudTrees();trees=refreshed||[];localStorage.setItem(STORE_KEY,JSON.stringify(trees));renderInventory();}).subscribe();
+    realtimeChannel=supabase.channel('public-arboreal-inventory').on('postgres_changes',{event:'*',schema:'public',table:'trees'},refreshCloudInventory).on('postgres_changes',{event:'*',schema:'public',table:'tree_photos'},refreshCloudInventory).on('postgres_changes',{event:'*',schema:'public',table:'tree_maintenance'},refreshCloudInventory).on('postgres_changes',{event:'*',schema:'public',table:'education_contents'},refreshCloudInventory).subscribe();
   } catch(error){notify('Não foi possível atualizar o inventário: '+error.message);}
 }
 
