@@ -128,25 +128,69 @@ function showTreeForm(tree = null) {
   $('#capInput', form).addEventListener('input', event => { $('#dapInput', form).value = event.target.value ? (Number(event.target.value) / Math.PI).toFixed(1) : ''; });
   $('#takePhoto', form).addEventListener('click', () => $('#cameraInput', form).click());
   $('#choosePhoto', form).addEventListener('click', () => $('#galleryInput', form).click());
-  async function addFiles(files) {
+  async function addFiles(files, fromCamera = false) {
     for (const file of [...files]) {
       if (!file.type.startsWith('image/')) continue;
-      const data = await compressImage(file);
-      photos.push({ name: file.name, data, type: 'other' });
+      if (fromCamera) {
+        notify('Obtendo coordenadas do local da foto…');
+        photos.push(await capturePhotoWithLocation(file, form));
+      } else {
+        photos.push({ name: file.name, data: await compressImage(file), type: 'gallery', location: null });
+      }
     }
     $('#photoPreview', form).innerHTML = photos.map((photo, i) => `<img src="${photo.data}" alt="Foto ${i+1}">`).join('');
   }
-  $('#cameraInput', form).addEventListener('change', event => addFiles(event.target.files));
+  $('#cameraInput', form).addEventListener('change', event => addFiles(event.target.files, true));
   $('#galleryInput', form).addEventListener('change', event => addFiles(event.target.files));
   form.addEventListener('submit', event => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(form).entries());
     if (!data.common && !data.scientific) { alert('Informe ao menos o nome popular ou científico.'); return; }
     const number = tree?.number || nextCode().number;
-    const saved = { ...tree, ...data, number, id: tree?.id || crypto.randomUUID(), photos, dap: data.cap ? (Number(data.cap) / Math.PI).toFixed(1) : '', maintenance: tree?.maintenance || [], updatedAt: new Date().toISOString() };
+    const cameraLocation = [...photos].reverse().find(photo => photo.type === 'camera' && photo.location)?.location;
+    const saved = { ...tree, ...data, ...(cameraLocation ? { latitude: cameraLocation.latitude, longitude: cameraLocation.longitude, locationAccuracy: cameraLocation.accuracy, locationCapturedAt: cameraLocation.capturedAt } : {}), number, id: tree?.id || crypto.randomUUID(), photos, dap: data.cap ? (Number(data.cap) / Math.PI).toFixed(1) : '', maintenance: tree?.maintenance || [], updatedAt: new Date().toISOString() };
     trees = editing ? trees.map(item => item.id === tree.id ? saved : item) : [...trees, saved];
     if (persist()) { closeModal(); renderInventory(); notify(editing ? 'Cadastro atualizado.' : `Árvore ${code} cadastrada neste dispositivo.`); }
   });
+}
+function getCurrentPosition() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Este dispositivo não disponibilizou o GPS.'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      position => resolve({
+        latitude: Number(position.coords.latitude.toFixed(7)),
+        longitude: Number(position.coords.longitude.toFixed(7)),
+        accuracy: Math.round(position.coords.accuracy),
+        capturedAt: new Date(position.timestamp).toISOString()
+      }),
+      error => {
+        const messages = {
+          1: 'Permita o acesso à localização nas configurações do aplicativo.',
+          2: 'O GPS não conseguiu determinar a localização. Tente em uma área aberta.',
+          3: 'O GPS demorou para responder. Tente novamente.'
+        };
+        reject(new Error(messages[error.code] || 'Não foi possível obter a localização.'));
+      },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+    );
+  });
+}
+async function capturePhotoWithLocation(file, form = null) {
+  let location = null;
+  try {
+    location = await getCurrentPosition();
+    if (form) {
+      form.elements.latitude.value = location.latitude;
+      form.elements.longitude.value = location.longitude;
+    }
+  } catch (error) {
+    notify(error.message + ' A foto será mantida sem coordenadas.');
+  }
+  const data = await compressImage(file);
+  return { name: file.name, data, type: 'camera', location };
 }
 async function compressImage(file) {
   return new Promise(resolve => {
@@ -172,7 +216,7 @@ async function showTreeDetails(id) {
     <div class="detail-code">${esc(tree.code)} <span>${esc(tree.condition || 'Condição não avaliada')}</span></div>
     <h3>${esc(tree.common || 'Nome popular não informado')}</h3><p><em>${esc(tree.scientific || 'Identificação científica pendente')}</em></p>
     <div class="detail-grid"><div><small>Família</small><strong>${esc(tree.family || '—')}</strong></div><div><small>Origem</small><strong>${esc(tree.origin || '—')}</strong></div><div><small>CAP</small><strong>${esc(tree.cap || '—')} cm</strong></div><div><small>DAP</small><strong>${esc(tree.dap || '—')} cm</strong></div><div><small>Altura</small><strong>${esc(tree.height || '—')} m</strong></div><div><small>Identificação</small><strong>${esc(tree.identification || 'Pendente')}</strong></div></div>
-    <p><strong>Fitossanidade:</strong> ${esc(tree.phytosanitary || 'Não informada')}</p><p><strong>Pragas / doenças:</strong> ${esc([tree.pests, tree.diseases].filter(Boolean).join(' / ') || 'Não informadas')}</p><p><strong>Observações:</strong> ${esc(tree.observations || 'Nenhuma')}</p>
+    <p><strong>Fitossanidade:</strong> ${esc(tree.phytosanitary || 'Não informada')}</p><p><strong>Pragas / doenças:</strong> ${esc([tree.pests, tree.diseases].filter(Boolean).join(' / ') || 'Não informadas')}</p><p><strong>Coordenadas:</strong> ${tree.latitude && tree.longitude ? `${esc(tree.latitude)}, ${esc(tree.longitude)} (precisão aproximada: ${esc(tree.locationAccuracy || 'não informada')} m)` : 'Não registradas'}</p><p><strong>Observações:</strong> ${esc(tree.observations || 'Nenhuma')}</p>
     <div class="detail-photos">${(tree.photos || []).map(photo => `<img src="${photo.data}" alt="Foto de ${esc(tree.code)}">`).join('')}</div>
     <div class="photo-actions"><button type="button" class="button button-outline" id="detailCamera">▣ Tirar foto</button><button type="button" class="button button-outline" id="detailGallery">＋ Enviar foto</button><input id="detailCameraInput" type="file" accept="image/*" capture="environment" hidden><input id="detailGalleryInput" type="file" accept="image/*" multiple hidden></div>
     <div class="maintenance-history"><h4>Histórico de manejo</h4>${(tree.maintenance || []).map(item => `<p><strong>${esc(item.date)}</strong> · ${esc(item.type)} — ${esc(item.description)}</p>`).join('') || '<p>Nenhum manejo registrado.</p>'}<button class="button button-outline" id="addMaintenance">＋ Registrar manejo</button></div>
@@ -189,12 +233,27 @@ async function showTreeDetails(id) {
   $('#addMaintenance', dialog).addEventListener('click', () => showMaintenanceForm(tree));
   $('#detailCamera', dialog).addEventListener('click', () => $('#detailCameraInput', dialog).click());
   $('#detailGallery', dialog).addEventListener('click', () => $('#detailGalleryInput', dialog).click());
-  async function saveMorePhotos(files) {
+  async function saveMorePhotos(files, fromCamera = false) {
     const updated = [...(tree.photos || [])];
-    for (const file of files) if (file.type.startsWith('image/')) updated.push({ name: file.name, data: await compressImage(file), type: 'other' });
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue;
+      if (fromCamera) {
+        notify('Obtendo coordenadas do local da foto…');
+        const photo = await capturePhotoWithLocation(file);
+        updated.push(photo);
+        if (photo.location) {
+          tree.latitude = photo.location.latitude;
+          tree.longitude = photo.location.longitude;
+          tree.locationAccuracy = photo.location.accuracy;
+          tree.locationCapturedAt = photo.location.capturedAt;
+        }
+      } else {
+        updated.push({ name: file.name, data: await compressImage(file), type: 'gallery', location: null });
+      }
+    }
     tree.photos = updated; persist(); showTreeDetails(tree.id);
   }
-  $('#detailCameraInput', dialog).addEventListener('change', e => saveMorePhotos(e.target.files));
+  $('#detailCameraInput', dialog).addEventListener('change', e => saveMorePhotos(e.target.files, true));
   $('#detailGalleryInput', dialog).addEventListener('change', e => saveMorePhotos(e.target.files));
 }
 async function showQr(tree) {
