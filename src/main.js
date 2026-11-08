@@ -1,6 +1,7 @@
 import QRCode from 'qrcode';
 import { supabase, loadCloudTrees, saveCloudTree, deleteCloudTree } from './lib/cloud.js';
 import { exportInventoryWorkbook } from './lib/export.js';
+const PUBLIC_APP_URL = import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin;
 
 const STORE_KEY = 'nazareno_demo_trees_v1';
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -92,7 +93,7 @@ function renderInventory() {
   } else {
     host.classList.add('inventory-list');
     host.innerHTML = list.map(tree => `<article class="tree-row">
-      <div class="tree-thumb">${tree.photos?.[0] ? `<img src="${tree.photos[0].data}" alt="Foto de ${esc(tree.common || tree.code)}">` : '<span>♧</span>'}</div>
+      <div class="tree-thumb">${tree.photos?.[0] ? `<img src="${tree.photos[0].data || tree.photos[0].url}" alt="Foto de ${esc(tree.common || tree.code)}">` : '<span>♧</span>'}</div>
       <div class="tree-row-main"><strong>${esc(tree.code)} · ${esc(tree.common || 'Nome popular não informado')}</strong><span><em>${esc(tree.scientific || 'Identificação botânica pendente')}</em> · ${esc(tree.family || 'Família não informada')}</span><small>CAP: ${esc(tree.cap || '—')} cm · DAP: ${esc(tree.dap || '—')} cm · Altura: ${esc(tree.height || '—')} m</small></div>
       <span class="tree-status">${esc(tree.condition || 'Não avaliada')}</span>
       <button class="button button-outline tree-open" data-open-tree="${tree.id}">Abrir ficha</button>
@@ -102,6 +103,7 @@ function renderInventory() {
   updateMetrics();
 }
 function showTreeForm(tree = null) {
+  if (!staffUser && !import.meta.env.DEV) { showProfile(); return; }
   const editing = Boolean(tree);
   const code = tree?.code || nextCode().code;
   const body = `<form id="treeForm" class="tree-form">
@@ -127,7 +129,7 @@ function showTreeForm(tree = null) {
     </div>
     <label class="full-label">Observações<textarea name="observations" rows="3">${esc(tree?.observations || '')}</textarea></label>
     <div class="photo-actions"><button type="button" class="button button-outline" id="takePhoto">▣ Tirar foto</button><button type="button" class="button button-outline" id="choosePhoto">＋ Enviar foto da galeria</button><input id="cameraInput" type="file" accept="image/*" capture="environment" hidden><input id="galleryInput" type="file" accept="image/*" multiple hidden></div>
-    <div id="photoPreview" class="photo-preview">${(tree?.photos || []).map((photo, i) => `<img src="${photo.data}" alt="Foto ${i+1}">`).join('')}</div>
+    <div id="photoPreview" class="photo-preview">${(tree?.photos || []).map((photo, i) => `<img src="${photo.data || photo.url}" alt="Foto ${i+1}">`).join('')}</div>
     <p class="storage-warning">Modo de avaliação: os dados e fotos ficam apenas neste navegador. Ainda não são enviados ao banco de dados.</p>
   </form>`;
   const dialog = openModal(editing ? `Editar árvore ${code}` : 'Cadastrar nova árvore', body, '<button type="button" class="button button-outline" data-close>Cancelar</button><button type="submit" form="treeForm" class="button button-primary">Salvar cadastro</button>');
@@ -265,7 +267,7 @@ async function showTreeDetails(id) {
   $('#detailGalleryInput', dialog).addEventListener('change', e => saveMorePhotos(e.target.files));
 }
 async function showQr(tree) {
-  const value = `${window.location.origin}${window.location.pathname}?tree=${encodeURIComponent(tree.code)}`;
+  const value = `${PUBLIC_APP_URL}/?tree=${encodeURIComponent(tree.code)}`;
   const image = await QRCode.toDataURL(value, { width: 260, margin: 2, color: { dark: '#173f32', light: '#ffffff' } });
   const dialog = openModal(`QR Code · ${tree.code}`, `<div class="qr-display"><img src="${image}" alt="QR Code de ${esc(tree.code)}"><strong>${esc(tree.common || tree.code)}</strong><span>${esc(tree.code)}</span><p>Este endereço abre a ficha digital pública quando o aplicativo estiver publicado em um endereço HTTPS permanente.</p></div>`, '<button class="button button-outline" data-close>Fechar</button><button class="button button-primary" id="printQr">Imprimir QR Code</button>');
   $('#printQr', dialog).addEventListener('click', () => {
@@ -399,8 +401,12 @@ function showMap() {
   const body = located.length ? `<div class="map-records">${located.map(t => `<p><strong>${esc(t.code)}</strong> · ${esc(t.common || 'Árvore')} <a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${encodeURIComponent(t.latitude)}&mlon=${encodeURIComponent(t.longitude)}#map=19/${encodeURIComponent(t.latitude)}/${encodeURIComponent(t.longitude)}">Abrir localização</a></p>`).join('')}</div>` : '<p>Nenhuma árvore possui coordenadas registradas. Informe latitude e longitude no cadastro para visualizar sua localização.</p>';
   openModal('Mapa das árvores', body, '<button class="button button-primary" data-close>Fechar</button>');
 }
-function showEducation() {
-  openModal('Circuito de educação ambiental', '<div class="access-info"><h3>Conheça as árvores da Praça Central</h3><p>O QR Code de cada indivíduo poderá apresentar nome popular, nome científico, família botânica, origem, características e curiosidades ecológicas.</p><p>As informações serão exibidas ao público somente depois da revisão técnica e publicação do cadastro.</p><p>O conteúdo educativo será preenchido com informações botânicas verificadas, sem inventar dados sobre as árvores locais.</p></div>', '<button class="button button-primary" data-close>Fechar</button>');
+async function showEducation() {
+  let content=[];
+  if(supabase){const result=await supabase.from("education_contents").select("title,summary,body,target_audience").eq("status","published").order("updated_at",{ascending:false});if(!result.error)content=result.data||[];}
+  const cards=content.map(item=>`<article class="education-public-item"><h3>${esc(item.title)}</h3><p>${esc(item.summary||"")}</p><p>${esc(item.body)}</p></article>`).join("");
+  const fallback='<div class="access-info"><h3>Conheça as árvores da Praça Central</h3><p>O projeto apresenta informações botânicas, características das árvores e sua importância ambiental.</p><p>Os conteúdos educativos serão elaborados e publicados pela equipe técnica após revisão.</p></div>';
+  openModal("Educação ambiental",cards||fallback,'<button class="button button-primary" data-close>Fechar</button>');
 }
 function bindEvents() {
   $('#newTreeButton').addEventListener('click', () => showTreeForm());
