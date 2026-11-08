@@ -1,4 +1,6 @@
 import QRCode from 'qrcode';
+import { supabase, loadCloudTrees, saveCloudTree, deleteCloudTree } from './lib/cloud.js';
+import { exportInventoryWorkbook } from './lib/export.js';
 
 const STORE_KEY = 'nazareno_demo_trees_v1';
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -9,6 +11,9 @@ const searchInput = $('#treeSearch');
 let trees = loadTrees();
 let activeFilter = { condition: '', identification: '' };
 let scannerStream = null;
+let staffUser = null;
+let staffRole = null;
+let realtimeChannel = null;
 
 function loadTrees() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
@@ -17,6 +22,9 @@ function loadTrees() {
 function persist() {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify(trees));
+    if (supabase && staffUser && ['admin','editor'].includes(staffRole)) {
+      syncCloudInventory().catch(error => notify(`Falha ao sincronizar: ${error.message}`));
+    }
     return true;
   } catch {
     alert('O armazenamento deste navegador está cheio. Remova algumas fotos e tente novamente.');
@@ -257,9 +265,9 @@ async function showTreeDetails(id) {
   $('#detailGalleryInput', dialog).addEventListener('change', e => saveMorePhotos(e.target.files));
 }
 async function showQr(tree) {
-  const value = `arvores-de-nazareno://tree/${tree.code}`;
+  const value = `${window.location.origin}${window.location.pathname}?tree=${encodeURIComponent(tree.code)}`;
   const image = await QRCode.toDataURL(value, { width: 260, margin: 2, color: { dark: '#173f32', light: '#ffffff' } });
-  const dialog = openModal(`QR Code · ${tree.code}`, `<div class="qr-display"><img src="${image}" alt="QR Code de ${esc(tree.code)}"><strong>${esc(tree.common || tree.code)}</strong><span>${esc(tree.code)}</span><p>Este código identifica o registro neste protótipo.</p></div>`, '<button class="button button-outline" data-close>Fechar</button><button class="button button-primary" id="printQr">Imprimir QR Code</button>');
+  const dialog = openModal(`QR Code · ${tree.code}`, `<div class="qr-display"><img src="${image}" alt="QR Code de ${esc(tree.code)}"><strong>${esc(tree.common || tree.code)}</strong><span>${esc(tree.code)}</span><p>Este endereço abre a ficha digital pública quando o aplicativo estiver publicado em um endereço HTTPS permanente.</p></div>`, '<button class="button button-outline" data-close>Fechar</button><button class="button button-primary" id="printQr">Imprimir QR Code</button>');
   $('#printQr', dialog).addEventListener('click', () => {
     const win = window.open('', '_blank');
     if (!win) { alert('Permita a abertura de janelas para imprimir.'); return; }
@@ -297,7 +305,9 @@ function showScanner() {
   }).catch(() => { status.textContent = 'Não foi possível acessar a câmera. Verifique a permissão ou digite o código manualmente.'; });
 }
 function openByCode(value) {
-  const code = String(value || '').trim().split('/').pop().toUpperCase();
+  let raw = String(value || '').trim();
+  try { const parsed = new URL(raw); raw = parsed.searchParams.get('tree') || parsed.pathname.split('/').pop(); } catch { raw = raw.split('/').pop(); }
+  const code = raw.toUpperCase();
   const tree = trees.find(item => item.code.toUpperCase() === code);
   if (!tree) { alert('Nenhuma árvore com esse código foi encontrada neste dispositivo.'); return; }
   showTreeDetails(tree.id);
@@ -325,8 +335,60 @@ function renderFilteredInventory(list) {
   $('#filterButton span').textContent = Number(Boolean(activeFilter.condition)) + Number(Boolean(activeFilter.identification));
 }
 function showProfile() {
-  openModal('Área técnica', '<div class="access-info"><h3>Ambiente de avaliação</h3><p>Este protótipo ainda não possui autenticação real. Os cadastros ficam neste navegador e não são compartilhados com visitantes.</p><p>Na versão conectada ao Supabase, visitantes poderão consultar fichas publicadas e somente usuários autorizados poderão cadastrar, editar ou excluir árvores.</p><span class="storage-warning">Não use dados oficiais nem informações sensíveis nesta etapa de demonstração.</span></div>', '<button class="button button-primary" data-close>Entendi</button>');
+  if (!supabase) {
+    openModal('Acesso administrativo', '<div class="access-info"><h3>Configuração do banco de dados pendente</h3><p>Para liberar o acesso da equipe, configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env.local e aplique as migrações SQL do projeto.</p><p>O acesso será restrito a contas autorizadas com perfil administrador ou editor. Visitantes não terão acesso a esta área.</p></div>', '<button class="button button-primary" data-close>Fechar</button>');
+    return;
+  }
+  if (staffUser) { showAdminPanel(); return; }
+  const dialog = openModal('Acesso da equipe', '<form id="staffLogin" class="tree-form"><label>E-mail institucional<input name="email" type="email" autocomplete="username" required></label><label>Senha<input name="password" type="password" autocomplete="current-password" required></label><p class="storage-warning">Somente contas previamente autorizadas pela administração municipal poderão acessar os recursos internos.</p></form>', '<button class="button button-outline" data-close>Cancelar</button><button class="button button-primary" type="submit" form="staffLogin">Entrar</button>');
+  $('#staffLogin',dialog).addEventListener('submit', async event => {
+    event.preventDefault();
+    const data=Object.fromEntries(new FormData(event.currentTarget).entries());
+    const {data:auth,error}=await supabase.auth.signInWithPassword(data);
+    if(error){notify('Não foi possível entrar. Confira o e-mail e a senha.');return;}
+    const {data:profile,error:profileError}=await supabase.from('profiles').select('role,full_name').eq('id',auth.user.id).single();
+    if(profileError || !['admin','editor'].includes(profile?.role)){
+      await supabase.auth.signOut();notify('Esta conta não possui autorização para a área técnica.');return;
+    }
+    staffUser=auth.user;staffRole=profile.role;closeModal();await bootstrapCloud();showAdminPanel();
+  });
 }
+async function syncCloudInventory() {
+  for (const tree of trees) {
+    const cloudId=await saveCloudTree(tree,staffUser.id);
+    if(cloudId) tree.id=cloudId;
+  }
+}
+async function showAdminPanel() {
+  const isAdmin=staffRole==='admin';
+  const dialog=openModal('Painel administrativo', `<div class="access-info"><h3>Gestão do inventário</h3><p>Conta: ${esc(staffUser?.email || '')} · Perfil: ${esc(staffRole || '')}</p><p>Os registros publicados ficam disponíveis nas fichas públicas e nos QR Codes. Rascunhos permanecem restritos à equipe.</p><div class="admin-actions"><button class="button button-primary" id="exportWorkbook">Exportar planilha Excel</button><button class="button button-outline" id="newEducation">Criar conteúdo educativo</button><button class="button button-outline" id="manageEducation">Gerenciar conteúdos</button>${isAdmin?'<button class="button button-outline" id="adminUsers">Orientações de usuários</button>':''}</div><p class="storage-warning">A exportação contém quatro abas: Inventário, Manejo, Fotografias e QR Codes.</p></div>`, '<button class="button button-outline" id="staffLogout">Sair da conta</button><button class="button button-primary" data-close>Fechar</button>');
+  $('#exportWorkbook',dialog).addEventListener('click',()=>exportInventoryWorkbook(trees));
+  $('#newEducation',dialog).addEventListener('click',()=>showEducationEditor());
+  $('#manageEducation',dialog).addEventListener('click',()=>manageEducationContent());
+  $('#staffLogout',dialog).addEventListener('click',async()=>{await supabase.auth.signOut();staffUser=null;staffRole=null;closeModal();notify('Sessão encerrada.');});
+  $('#adminUsers',dialog)?.addEventListener('click',()=>openModal('Autorização de usuários','<p>Novas contas devem ser criadas pelo administrador do projeto Supabase. Depois, atribua o perfil editor ou admin na tabela profiles. O perfil viewer não acessa esta área.</p>','<button class="button button-primary" data-close>Fechar</button>'));
+}
+async function showEducationEditor(item=null) {
+  const dialog=openModal(item?'Editar conteúdo educativo':'Novo conteúdo educativo',`<form id="educationForm" class="tree-form"><label>Título<input name="title" required value="${esc(item?.title||'')}"></label><label>Resumo<input name="summary" value="${esc(item?.summary||'')}"></label><label>Espécie relacionada<input name="related_species" value="${esc(item?.related_species||'')}"></label><label>Público-alvo<select name="target_audience"><option value="public">População</option><option value="schools">Escolas</option><option value="children">Crianças</option><option value="teachers">Educadores</option></select></label><label>Conteúdo<textarea name="body" rows="7" required>${esc(item?.body||'')}</textarea></label><label>Status<select name="status"><option value="draft">Rascunho</option><option value="published">Publicado</option></select></label></form>`, '<button class="button button-outline" data-close>Cancelar</button><button class="button button-primary" type="submit" form="educationForm">Salvar conteúdo</button>');
+  $('#educationForm',dialog).addEventListener('submit',async event=>{event.preventDefault();const form=Object.fromEntries(new FormData(event.currentTarget).entries());const slug=(form.title.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''));const row={...form,slug,updated_by:staffUser.id,...(item?{}:{created_by:staffUser.id})};const result=item?await supabase.from('education_contents').update(row).eq('id',item.id):await supabase.from('education_contents').insert(row);if(result.error){notify('Não foi possível salvar: '+result.error.message);return;}closeModal();notify('Conteúdo educativo salvo.');});
+}
+async function manageEducationContent() {
+  const {data,error}=await supabase.from('education_contents').select('*').order('updated_at',{ascending:false});
+  if(error){notify(error.message);return;}
+  const body=data.length?data.map(item=>`<div class="education-admin-row"><strong>${esc(item.title)}</strong><span>${esc(item.status)}</span><button class="button button-outline" data-edit-content="${item.id}">Editar</button></div>`).join(''):'<p>Nenhum conteúdo educativo cadastrado.</p>';
+  const dialog=openModal('Conteúdos educativos',body,'<button class="button button-primary" data-close>Fechar</button>');
+  $('[data-edit-content]',dialog).forEach(button=>button.addEventListener('click',()=>showEducationEditor(data.find(x=>x.id===button.dataset.editContent))));
+}
+async function bootstrapCloud() {
+  if(!supabase)return;
+  try {
+    const remote=await loadCloudTrees();
+    if(remote){trees=remote;localStorage.setItem(STORE_KEY,JSON.stringify(trees));renderInventory();}
+    realtimeChannel?.unsubscribe();
+    realtimeChannel=supabase.channel('public-arboreal-inventory').on('postgres_changes',{event:'*',schema:'public',table:'trees'},async()=>{const refreshed=await loadCloudTrees();trees=refreshed||[];localStorage.setItem(STORE_KEY,JSON.stringify(trees));renderInventory();}).subscribe();
+  } catch(error){notify('Não foi possível atualizar o inventário: '+error.message);}
+}
+
 function showQrManager() {
   const body = trees.length ? `<div class="qr-list">${trees.map(t => `<button class="button button-outline" data-qr-tree="${t.id}">${esc(t.code)} · ${esc(t.common || 'Sem nome popular')}</button>`).join('')}</div>` : '<p>Cadastre uma árvore para gerar seu QR Code individual.</p>';
   const dialog = openModal('QR Codes e placas', body, '<button class="button button-primary" data-close>Fechar</button>');
@@ -374,3 +436,6 @@ function bindEvents() {
 document.documentElement.dataset.app = 'arvores-de-nazareno';
 bindEvents();
 renderInventory();
+if (supabase) bootstrapCloud();
+const requestedTree=new URLSearchParams(window.location.search).get('tree');
+if(requestedTree) setTimeout(()=>openByCode(requestedTree),250);
