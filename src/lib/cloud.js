@@ -19,9 +19,9 @@ const toLocal = async row => {
     latitude:row.latitude ?? '', longitude:row.longitude ?? '', surveyDate:row.survey_date || '',
     responsible:row.responsible || '', observations:row.observations || '',
     environmentalImportance:row.environmental_importance || '', educationalFact:row.educational_fact || '',
-    publicationStatus:row.publication_status, updatedAt:row.updated_at,
+    publicationStatus:row.publication_status, plateStatus:row.plate_status || 'not_installed', updatedAt:row.updated_at,
     photos, maintenance:(row.tree_maintenance || []).map(m => ({
-      date:m.event_date, type:m.event_type, description:m.description, responsible:m.performed_by || ''
+      id:m.id, date:m.event_date, type:({inspection:'Inspeção',pruning:'Poda',pest_control:'Controle de pragas',disease_treatment:'Tratamento de doença',risk_assessment:'Avaliação de risco',planting:'Plantio',removal:'Remoção',other:'Outro'})[m.event_type] || m.event_type, description:m.description, responsible:m.performed_by || ''
     }))
   };
 };
@@ -55,11 +55,17 @@ export async function saveCloudTree(tree, userId) {
     longitude:tree.longitude === '' ? null : Number(tree.longitude),
     survey_date:tree.surveyDate || null, responsible:tree.responsible || null,
     observations:tree.observations || null, environmental_importance:tree.environmentalImportance || null,
-    educational_fact:tree.educationalFact || null, publication_status:tree.publicationStatus || 'draft',
+    educational_fact:tree.educationalFact || null, publication_status:tree.publicationStatus || 'draft', plate_status:tree.plateStatus || 'not_installed',
     updated_by:userId
   };
   const { data:saved, error } = await supabase.from('trees').upsert(row,{onConflict:'code'}).select('id').single();
   if (error) throw error;
+  for (const item of (tree.maintenance || [])) {
+    if (item.id) continue;
+    const eventType=({'Inspeção':'inspection','Poda':'pruning','Controle de pragas':'pest_control','Tratamento de doença':'disease_treatment','Avaliação de risco':'risk_assessment','Plantio':'planting','Remoção':'removal','Outro':'other'})[item.type] || 'other';
+    const inserted=await supabase.from('tree_maintenance').insert({tree_id:saved.id,event_type:eventType,event_date:item.date,description:item.description,performed_by:item.responsible || null,created_by:userId});
+    if(inserted.error) throw inserted.error;
+  }
   for (const photo of (tree.photos || [])) {
     if (photo.storagePath || !photo.data) continue;
     const blob = await (await fetch(photo.data)).blob();
