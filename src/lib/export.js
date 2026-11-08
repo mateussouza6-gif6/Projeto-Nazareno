@@ -1,4 +1,6 @@
 import * as XLSX from 'xlsx';
+const configuredPublicUrl = import.meta.env.VITE_PUBLIC_APP_URL;
+const publicBaseUrl = configuredPublicUrl ? (configuredPublicUrl.endsWith('/') ? configuredPublicUrl : configuredPublicUrl + '/') : new URL(import.meta.env.BASE_URL, window.location.href).href;
 
 const blank = value => value === undefined || value === null ? '' : value;
 export function exportInventoryWorkbook(trees) {
@@ -22,7 +24,7 @@ export function exportInventoryWorkbook(trees) {
     Legenda: p.caption || p.name || '', 'Arquivo/URL': p.url || ''
   })));
   const qrs = trees.map(t => ({
-    Código: t.code, Número: t.number, 'Link da ficha': t.publicUrl || `${import.meta.env.VITE_PUBLIC_APP_URL || window.location.origin}/?tree=${encodeURIComponent(t.code)}`,
+    Código: t.code, Número: t.number, 'Link da ficha': t.publicUrl || `${publicBaseUrl}?tree=${encodeURIComponent(t.code)}`,
     'Situação da placa': t.plateStatus || 'Não instalada',
     'Status da ficha': t.publicationStatus || 'Rascunho'
   }));
