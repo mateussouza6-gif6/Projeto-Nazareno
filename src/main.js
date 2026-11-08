@@ -124,6 +124,7 @@ function showTreeForm(tree = null) {
       <label>Estado fitossanitário<input name="phytosanitary" value="${esc(tree?.phytosanitary || '')}" placeholder="Ex.: sem sintomas aparentes"></label>
       <label>Pragas<input name="pests" value="${esc(tree?.pests || '')}"></label>
       <label>Doenças<input name="diseases" value="${esc(tree?.diseases || '')}"></label>
+      <label>Status da ficha pública<select name="publicationStatus"><option value="draft">Rascunho — não público</option><option value="published">Publicada</option><option value="archived">Arquivada</option></select></label>
       <label>Necessidade de poda<select name="pruningNeeded"><option value="">Não avaliada</option><option value="true">Sim</option><option value="false">Não</option></select></label>
       <label>Conflito com fiação<select name="wireConflict"><option value="">Não avaliado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
       <label>Conflito com calçada<select name="sidewalkConflict"><option value="">Não avaliado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
@@ -480,6 +481,6 @@ function bindEvents() {
 document.documentElement.dataset.app = 'arvores-de-nazareno';
 bindEvents();
 renderInventory();
-if (supabase) bootstrapCloud();
 const requestedTree=new URLSearchParams(window.location.search).get('tree');
-if(requestedTree) setTimeout(()=>openByCode(requestedTree),250);
+if (supabase) bootstrapCloud().then(()=>{if(requestedTree) showPublicTreeByCode(requestedTree);});
+else if(requestedTree) setTimeout(()=>showPublicTreeByCode(requestedTree),250);
